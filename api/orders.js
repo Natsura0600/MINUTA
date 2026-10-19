@@ -8,14 +8,18 @@ module.exports = async (req, res) => {
     const tenant = await T.requireTenant(req);
     T.requireOwner(req, tenant);
     if (req.method === 'GET') {
-      return send(res, 200, { orders: await listOrders(tenant.slug, 60), mp: Boolean(tenant.mp), estado: T.estado(tenant), venceEl: tenant.venceEl });
+      return send(res, 200, { orders: await listOrders(tenant.slug, 60), estado: T.estado(tenant), venceEl: tenant.venceEl });
     }
     if (req.method === 'PATCH') {
       const b = body(req);
-      if (!ESTADOS.includes(b.estado) || b.estado === 'pendiente_pago') throw new Reject('Estado inválido.', 400);
       const o = await getOrder(tenant.slug, b.id);
       if (!o) throw new Reject('No encontramos ese pedido.', 404, 'pedido_no_encontrado');
-      o.estado = b.estado;
+      if (typeof b.pagado === 'boolean') o.pago.pagado = b.pagado;
+      if (b.estado !== undefined) {
+        if (!ESTADOS.includes(b.estado)) throw new Reject('Estado inválido.', 400);
+        if (b.estado === 'en_camino' && o.entrega.modo !== 'delivery') throw new Reject('Solo los pedidos con delivery pueden ir en camino.', 400);
+        o.estado = b.estado;
+      }
       await saveOrder(tenant.slug, o);
       return send(res, 200, { ok: true, order: o });
     }

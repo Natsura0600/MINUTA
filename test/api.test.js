@@ -28,6 +28,7 @@ function redis(args) {
     case 'EXPIRE': return 1;
     case 'SADD': { const s = sets.get(a[0]) || new Set(); s.add(a[1]); sets.set(a[0], s); return 1; }
     case 'SREM': { const s = sets.get(a[0]); if (s) s.delete(a[1]); return 1; }
+    case 'SCARD': return (sets.get(a[0]) || new Set()).size;
     case 'SMEMBERS': return [...(sets.get(a[0]) || [])];
     case 'LPUSH': { const l = lists.get(a[0]) || []; l.unshift(a[1]); lists.set(a[0], l); return l.length; }
     case 'LTRIM': return 'OK';
@@ -37,35 +38,15 @@ function redis(args) {
   }
 }
 
-// ---- Mercado Pago simulado: registra con qué token se llamó ----
-const TOKEN_A = 'APP_USR-aaaaaaaaaaaaaaaaaaaaaaaa-1111';
-const TOKEN_B = 'APP_USR-bbbbbbbbbbbbbbbbbbbbbbbb-2222';
-const TOKEN_MALO = 'APP_USR-BADBADBADBADBADBADBADBAD-0000';
-const mpPayments = {};
-const mpPrefs = [];
-const mpCalls = [];
-
 global.fetch = async (url, opts = {}) => {
-  const json = (status, b) => ({ ok: status < 400, status, json: async () => b });
-  if (url === 'https://redis.test') return json(200, { result: redis(JSON.parse(opts.body)) });
-  const auth = (opts.headers && opts.headers.Authorization) || '';
-  const token = auth.replace('Bearer ', '');
-  if (url.startsWith('https://api.mercadopago.com')) mpCalls.push({ url, token });
-  if (url === 'https://api.mercadopago.com/users/me') return token.includes('BAD') ? json(401, { message: 'invalid' }) : json(200, { id: 1 });
-  if (url === 'https://api.mercadopago.com/checkout/preferences') {
-    const pref = JSON.parse(opts.body);
-    mpPrefs.push({ pref, token });
-    return json(201, { id: 'pref-' + mpPrefs.length, init_point: 'https://mp.test/pay/' + pref.external_reference });
-  }
-  const m = url.match(/^https:\/\/api\.mercadopago\.com\/v1\/payments\/(\d+)$/);
-  if (m) return mpPayments[m[1]] ? json(200, mpPayments[m[1]]) : json(404, { message: 'not found' });
+  if (url === 'https://redis.test') return { ok: true, status: 200, json: async () => ({ result: redis(JSON.parse(opts.body)) }) };
   throw new Error('fetch inesperado: ' + url);
 };
 
 const handlers = {
   menu: require('../api/menu'), login: require('../api/login'), account: require('../api/account'),
-  checkout: require('../api/checkout'), webhook: require('../api/webhook'), order: require('../api/order'),
-  orders: require('../api/orders'), superadmin: require('../api/superadmin')
+  checkout: require('../api/checkout'), order: require('../api/order'), orders: require('../api/orders'),
+  superadmin: require('../api/superadmin'), plan: require('../api/plan'), suscribir: require('../api/suscribir')
 };
 const { isOpen, nowAR, DEFAULT } = require('../lib/config');
 const T = require('../lib/tenants');
@@ -96,7 +77,7 @@ const abierto = (extra) => {
 const pedido = (extra) => Object.assign({
   items: [{ id: 'cla', qty: 2, extras: ['e2'], nota: 'sin pickles' }],
   modo: 'delivery', zona: 'z1', dir: 'San Martín 123',
-  cliente: { nombre: 'Ana', tel: '11 5555-1234' }, pago: 'mp'
+  cliente: { nombre: 'Ana', tel: '11 5555-1234' }, pago: 'transferencia'
 }, extra);
 
 // Crea un local, entra como dueño y deja el menú abierto. Devuelve lo necesario para operar.
@@ -156,7 +137,6 @@ test('alta de locales: validaciones, contraseña inicial y duplicados', async ()
   assert.strictEqual(m.body.config.pausado, true);
   assert.strictEqual(m.body.config.whatsapp, '');
   assert.strictEqual(m.body.abierto, false);
-  assert.strictEqual(m.body.mp, false);
 });
 
 test('login: solo entra el dueño de ese local, y la contraseña nueva cierra las sesiones viejas', async () => {
@@ -218,107 +198,6 @@ test('cada local tiene su menú y sus pedidos, sin mezclarse', async () => {
   assert.strictEqual(pa.body.numero, 1); assert.strictEqual(pb.body.numero, 1); // numeración propia
 });
 
-test('el token de Mercado Pago se valida, se guarda cifrado y cada local cobra en su cuenta', async () => {
-  const a = await nuevoLocal('cobra-a');
-  const b = await nuevoLocal('cobra-b');
-  const conectar = (l, token) => call('account', { method: 'POST', host: l.h, headers: bearer(l.token), body: { accion: 'mp', token } });
-
-  assert.strictEqual((await conectar(a, 'no-es-un-token')).status, 400);
-  assert.strictEqual((await conectar(a, TOKEN_MALO)).status, 400);
-  assert.strictEqual((await call('checkout', { method: 'POST', host: a.h, body: pedido() })).status, 400); // sin MP conectado
-
-  const ok = await conectar(a, TOKEN_A);
-  assert.strictEqual(ok.status, 200);
-  assert.strictEqual(ok.body.mp.last4, '1111');
-  assert.strictEqual((await conectar(b, TOKEN_B)).status, 200);
-
-  const guardado = db.get('t:cobra-a:meta');
-  assert.ok(!guardado.includes('aaaaaaaaaaaaaaaaaaaaaaaa'), 'el token no debe quedar en claro');
-  assert.strictEqual(cr.decrypt(JSON.parse(guardado).mp.enc), TOKEN_A);
-
-  const cuenta = await call('account', { host: a.h, headers: bearer(a.token) });
-  assert.strictEqual(cuenta.body.mp.conectado, true);
-  assert.strictEqual(JSON.stringify(cuenta.body).includes('aaaaaaaa'), false);
-  assert.strictEqual((await call('menu', { host: a.h })).body.mp, true);
-
-  const ra = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
-  const rb = await call('checkout', { method: 'POST', host: b.h, body: pedido() });
-  assert.strictEqual(ra.status, 200, JSON.stringify(ra.body)); assert.strictEqual(rb.status, 200);
-  const pa = mpPrefs.find((p) => p.pref.external_reference === ra.body.id);
-  const pb = mpPrefs.find((p) => p.pref.external_reference === rb.body.id);
-  assert.strictEqual(pa.token, TOKEN_A);
-  assert.strictEqual(pb.token, TOKEN_B);
-  assert.strictEqual(pa.pref.notification_url, 'https://cobra-a.pedidos.test/api/webhook');
-  assert.strictEqual(pa.pref.back_urls.success, 'https://cobra-a.pedidos.test/?pedido=' + ra.body.id);
-  const total = pa.pref.items.reduce((s, i) => s + i.unit_price * i.quantity, 0);
-  assert.strictEqual(total, (9800 + 1500) * 2 + 1500);
-  assert.match(pa.pref.expiration_date_to, /^\d{4}-\d\d-\d\dT\d\d:\d\d:\d\d\.\d{3}-03:00$/);
-
-  // desconectar
-  const quitar = await call('account', { method: 'POST', host: a.h, headers: bearer(a.token), body: { accion: 'mp_quitar' } });
-  assert.strictEqual(quitar.body.mp.conectado, false);
-  assert.strictEqual((await call('checkout', { method: 'POST', host: a.h, body: pedido() })).status, 400);
-});
-
-test('el pago se confirma con el token del local que corresponde', async () => {
-  const a = await nuevoLocal('pago-a');
-  const b = await nuevoLocal('pago-b');
-  await call('account', { method: 'POST', host: a.h, headers: bearer(a.token), body: { accion: 'mp', token: TOKEN_A } });
-  await call('account', { method: 'POST', host: b.h, headers: bearer(b.token), body: { accion: 'mp', token: TOKEN_B } });
-
-  const c = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
-  const o = JSON.parse(db.get('t:pago-a:order:' + c.body.id));
-  assert.strictEqual(o.estado, 'pendiente_pago');
-
-  mpPayments['880001'] = { id: 880001, status: 'approved', external_reference: o.id, transaction_amount: o.total, currency_id: 'ARS' };
-  mpCalls.length = 0;
-  const w = await call('webhook', { method: 'POST', host: a.h, query: { type: 'payment', 'data.id': '880001' } });
-  assert.strictEqual(w.status, 200);
-  assert.strictEqual(mpCalls[0].token, TOKEN_A);
-  let s = await call('order', { host: a.h, query: { id: o.id } });
-  assert.strictEqual(s.body.estado, 'nuevo');
-  assert.strictEqual(s.body.pago.estado, 'aprobado');
-  assert.strictEqual(s.body.cliente, undefined);
-
-  // un aviso con ese pago al subdominio de otro local no toca ni encuentra el pedido
-  await call('webhook', { method: 'POST', host: b.h, query: { type: 'payment', 'data.id': '880001' } });
-  assert.strictEqual((await call('order', { host: b.h, query: { id: o.id } })).status, 404);
-
-  // el local avanza el pedido; un segundo aviso no lo vuelve a "nuevo"
-  assert.strictEqual((await call('orders', { method: 'PATCH', host: a.h, headers: bearer(a.token), body: { id: o.id, estado: 'preparando' } })).status, 200);
-  await call('webhook', { method: 'POST', host: a.h, query: { type: 'payment', 'data.id': '880001' } });
-  assert.strictEqual((await call('order', { host: a.h, query: { id: o.id } })).body.estado, 'preparando');
-});
-
-test('pagos con monto distinto, avisos de otro tipo o pagos inexistentes no aprueban nada', async () => {
-  const a = await nuevoLocal('pago-c');
-  await call('account', { method: 'POST', host: a.h, headers: bearer(a.token), body: { accion: 'mp', token: TOKEN_A } });
-  const c = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
-  const o = JSON.parse(db.get('t:pago-c:order:' + c.body.id));
-  mpPayments['880002'] = { id: 880002, status: 'approved', external_reference: o.id, transaction_amount: 100, currency_id: 'ARS' };
-  await call('webhook', { method: 'POST', host: a.h, query: { type: 'payment', 'data.id': '880002' } });
-  assert.strictEqual((await call('order', { host: a.h, query: { id: o.id } })).body.estado, 'pendiente_pago');
-  assert.strictEqual((await call('webhook', { method: 'POST', host: a.h, query: { type: 'merchant_order', 'data.id': '1' } })).status, 200);
-  assert.strictEqual((await call('webhook', { method: 'POST', host: a.h, query: { type: 'payment', 'data.id': '123456' } })).status, 200);
-  assert.strictEqual((await call('webhook', { method: 'POST', host: host('no-existe'), query: { type: 'payment', 'data.id': '880002' } })).status, 200);
-});
-
-test('al volver de Mercado Pago se confirma el pago, y un rechazo se puede reintentar', async () => {
-  const a = await nuevoLocal('pago-d');
-  await call('account', { method: 'POST', host: a.h, headers: bearer(a.token), body: { accion: 'mp', token: TOKEN_A } });
-  const c = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
-  const o = JSON.parse(db.get('t:pago-d:order:' + c.body.id));
-
-  mpPayments['880003'] = { id: 880003, status: 'rejected', external_reference: o.id, transaction_amount: o.total, currency_id: 'ARS' };
-  let s = await call('order', { host: a.h, query: { id: o.id, payment_id: '880003' } });
-  assert.strictEqual(s.body.pago.estado, 'rechazado');
-  assert.strictEqual(s.body.estado, 'pendiente_pago');
-
-  mpPayments['880004'] = { id: 880004, status: 'approved', external_reference: o.id, transaction_amount: o.total, currency_id: 'ARS' };
-  s = await call('order', { host: a.h, query: { id: o.id, payment_id: '880004' } });
-  assert.strictEqual(s.body.estado, 'nuevo');
-});
-
 test('mensualidad: un local vencido o suspendido no toma pedidos, y registrar el pago lo reactiva', async () => {
   const a = await nuevoLocal('mensual');
   const efectivo = pedido({ pago: 'efectivo', modo: 'retiro' });
@@ -352,17 +231,6 @@ test('mensualidad: un local vencido o suspendido no toma pedidos, y registrar el
   assert.strictEqual((await call('checkout', { method: 'POST', host: a.h, body: efectivo })).status, 403);
   await call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'editar', slug: 'mensual', activo: true } });
   assert.strictEqual((await call('checkout', { method: 'POST', host: a.h, body: efectivo })).status, 200);
-});
-
-test('los pagos ya hechos se siguen confirmando aunque el local esté suspendido', async () => {
-  const a = await nuevoLocal('susp');
-  await call('account', { method: 'POST', host: a.h, headers: bearer(a.token), body: { accion: 'mp', token: TOKEN_A } });
-  const c = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
-  const o = JSON.parse(db.get('t:susp:order:' + c.body.id));
-  await call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'editar', slug: 'susp', activo: false } });
-  mpPayments['880005'] = { id: 880005, status: 'approved', external_reference: o.id, transaction_amount: o.total, currency_id: 'ARS' };
-  await call('webhook', { method: 'POST', host: a.h, query: { type: 'payment', 'data.id': '880005' } });
-  assert.strictEqual((await call('order', { host: a.h, query: { id: o.id } })).body.estado, 'nuevo');
 });
 
 test('superadmin: contraseña nueva, edición, borrado con confirmación', async () => {
@@ -433,6 +301,134 @@ test('limita los pedidos repetidos y los intentos de contraseña', async () => {
   assert.strictEqual(ultimo.status, 401);
   ultimo = await call('login', { method: 'POST', host: a.h, body: { email: 'x@y.com', password: 'mala' }, headers: g, keepLimits: true });
   assert.strictEqual(ultimo.status, 429);
+});
+
+test('el cliente sigue su pedido y el local lo va avanzando', async () => {
+  const a = await nuevoLocal('sigue');
+  const b = await nuevoLocal('otro-sigue');
+  const c = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
+  assert.strictEqual(c.status, 200, JSON.stringify(c.body));
+  const id = c.body.id;
+  const ver = async (h) => call('order', { host: h || a.h, query: { id } });
+  let s = await ver();
+  assert.strictEqual(s.body.estado, 'nuevo');
+  assert.strictEqual(s.body.modo, 'delivery');
+  assert.strictEqual(s.body.pago.metodo, 'transferencia');
+  assert.strictEqual(s.body.pago.pagado, false);
+  assert.strictEqual(s.body.cliente, undefined); // sin datos personales
+  assert.strictEqual(s.headers['Cache-Control'], 'no-store');
+  const patch = (body, token, h) => call('orders', { method: 'PATCH', host: h || a.h, headers: bearer(token || a.token), body: Object.assign({ id }, body) });
+
+  // el cliente no puede cambiar el estado, ni otro local
+  assert.strictEqual((await call('orders', { method: 'PATCH', host: a.h, body: { id, estado: 'listo' } })).status, 401);
+  assert.strictEqual((await patch({ estado: 'listo' }, b.token, b.h)).status, 404);
+
+  assert.strictEqual((await patch({ estado: 'preparando' })).status, 200);
+  assert.strictEqual((await ver()).body.estado, 'preparando');
+  assert.strictEqual((await patch({ estado: 'inventado' })).status, 400);
+  assert.strictEqual((await patch({ estado: 'listo' })).status, 200);
+  assert.strictEqual((await patch({ estado: 'en_camino' })).status, 200);
+  assert.strictEqual((await ver()).body.estado, 'en_camino');
+  assert.strictEqual((await patch({ pagado: true })).status, 200);
+  s = await ver();
+  assert.strictEqual(s.body.pago.pagado, true);
+  assert.strictEqual(s.body.estado, 'en_camino');
+  assert.strictEqual((await patch({ estado: 'entregado' })).status, 200);
+  assert.strictEqual((await ver()).body.estado, 'entregado');
+
+  // "en camino" solo existe para delivery
+  const r = await call('checkout', { method: 'POST', host: a.h, body: pedido({ modo: 'retiro', pago: 'efectivo' }) });
+  const bad = await call('orders', { method: 'PATCH', host: a.h, headers: bearer(a.token), body: { id: r.body.id, estado: 'en_camino' } });
+  assert.strictEqual(bad.status, 400);
+
+  assert.strictEqual((await ver(b.h)).status, 404);
+  assert.strictEqual((await call('order', { host: a.h, query: { id: 'no-es-un-id' } })).status, 404);
+});
+
+test('logo y color del local se validan', async () => {
+  const a = await nuevoLocal('marca');
+  const put = (cfg) => call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: cfg });
+  const png = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
+  assert.strictEqual((await put(abierto({ color: '#1d4ed8', logo: png }))).status, 200);
+  const m = await call('menu', { host: a.h });
+  assert.strictEqual(m.body.config.color, '#1d4ed8');
+  assert.strictEqual(m.body.config.logo, png);
+  assert.strictEqual((await put(abierto({ color: 'rojo' }))).status, 400);
+  assert.strictEqual((await put(abierto({ color: '#12345' }))).status, 400);
+  assert.strictEqual((await put(abierto({ logo: 'https://malo.test/x.png' }))).status, 400);
+  assert.strictEqual((await put(abierto({ logo: 'data:image/svg+xml;base64,PHN2Zz4=' }))).status, 400);
+  assert.strictEqual((await put(abierto({ logo: 'data:text/html;base64,PGI+' }))).status, 400);
+  assert.strictEqual((await put(abierto({ logo: 'data:image/png;base64,' + 'A'.repeat(150001) }))).status, 400);
+  assert.strictEqual((await put(abierto({ logo: '' }))).status, 200);
+});
+
+test('la página principal: sin local, el menú avisa que es la presentación', async () => {
+  const r = await call('menu', { host: 'pedidos.test' });
+  assert.strictEqual(r.status, 200);
+  assert.strictEqual(r.body.landing, true);
+  assert.strictEqual((await call('menu', { host: 'pedidos.test', query: { local: 'nadie' } })).status, 404);
+});
+
+test('plan público: valores iniciales y edición desde tu panel', async () => {
+  const p0 = await call('plan');
+  assert.strictEqual(p0.status, 200);
+  assert.strictEqual(p0.body.plan.precio, '');
+  assert.ok(p0.body.plan.incluye.length >= 5);
+  const guardar = (plan) => call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'plan', plan } });
+  assert.strictEqual((await call('superadmin', { method: 'POST', body: { accion: 'plan', plan: {} } })).status, 401);
+  assert.strictEqual((await guardar({ whatsapp: '123' })).status, 400);
+  const ok = await guardar({ precio: '$25.000', periodo: 'por mes', alta: 'Alta sin cargo', whatsapp: '54 9 11 5555-0000', instagram: '@picture.web', incluye: ['Uno', ' ', 'Dos'], marca: 'Picture Web Dev' });
+  assert.strictEqual(ok.status, 200);
+  const p1 = (await call('plan')).body.plan;
+  assert.strictEqual(p1.precio, '$25.000');
+  assert.strictEqual(p1.whatsapp, '5491155550000');
+  assert.strictEqual(p1.instagram, 'picture.web');
+  assert.deepStrictEqual(p1.incluye, ['Uno', 'Dos']);
+});
+
+test('solicitudes públicas: se validan, no crean locales y se aprueban desde tu panel', async () => {
+  const enviar = (b, extra) => call('suscribir', Object.assign({ method: 'POST', body: Object.assign({ nombre: 'Burger Norte', email: 'norte@mail.com', whatsapp: '11 5555-1234' }, b) }, extra));
+  assert.strictEqual((await call('suscribir')).status, 405);
+  assert.strictEqual((await enviar({ nombre: '' })).status, 400);
+  assert.strictEqual((await enviar({ email: 'no' })).status, 400);
+  assert.strictEqual((await enviar({ whatsapp: '12' })).status, 400);
+  assert.strictEqual((await enviar({ web: 'robot' })).status, 200); // trampa: se ignora en silencio
+  assert.strictEqual((await call('superadmin', { headers: SUPER })).body.solicitudes.length, 0);
+
+  const ok = await enviar({ zona: 'Centro', mensaje: 'Hola' });
+  assert.strictEqual(ok.status, 200);
+  const lista = (await call('superadmin', { headers: SUPER })).body;
+  assert.strictEqual(lista.solicitudes.length, 1);
+  const lead = lista.solicitudes[0];
+  assert.strictEqual(lead.estado, 'nueva');
+  assert.strictEqual(lead.email, 'norte@mail.com');
+  assert.ok(!lista.locales.some((l) => l.slug === 'burger-norte')); // no crea nada solo
+  assert.strictEqual((await call('superadmin', { method: 'POST', body: { accion: 'solicitud_aprobar', id: lead.id, slug: 'burger-norte' } })).status, 401);
+
+  const mala = await call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'solicitud_aprobar', id: lead.id, slug: 'Mal Slug' } });
+  assert.strictEqual(mala.status, 400);
+  const apr = await call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'solicitud_aprobar', id: lead.id, slug: 'burger-norte', venceEl: '2099-01-01' } });
+  assert.strictEqual(apr.status, 200, JSON.stringify(apr.body));
+  assert.strictEqual(apr.body.local.email, 'norte@mail.com');
+  assert.ok(apr.body.password.length >= 12);
+  const login = await call('login', { method: 'POST', host: host('burger-norte'), body: { email: 'norte@mail.com', password: apr.body.password } });
+  assert.strictEqual(login.status, 200);
+  const despues = (await call('superadmin', { headers: SUPER })).body.solicitudes[0];
+  assert.strictEqual(despues.estado, 'aprobada');
+  assert.strictEqual(despues.slug, 'burger-norte');
+
+  // descartar otra
+  await enviar({ nombre: 'Otro Local', email: 'otro@mail.com' });
+  const otra = (await call('superadmin', { headers: SUPER })).body.solicitudes.find((l) => l.estado === 'nueva');
+  assert.strictEqual((await call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'solicitud_borrar', id: otra.id } })).status, 200);
+  assert.ok(!(await call('superadmin', { headers: SUPER })).body.solicitudes.some((l) => l.id === otra.id));
+});
+
+test('las solicitudes tienen límite por persona', async () => {
+  const h = { 'x-forwarded-for': '7.7.7.7' };
+  let r;
+  for (let i = 0; i < 5; i++) r = await call('suscribir', { method: 'POST', headers: h, keepLimits: true, body: { nombre: 'Local ' + i, email: 'a' + i + '@mail.com', whatsapp: '1155551234' } });
+  assert.strictEqual(r.status, 429);
 });
 
 test('horario con hora argentina y fechas de la mensualidad', () => {

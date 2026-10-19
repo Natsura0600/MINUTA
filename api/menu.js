@@ -1,10 +1,12 @@
 const { getConfig, saveConfig, sanitizeConfig, isOpen } = require('../lib/config');
 const T = require('../lib/tenants');
-const { send, fail, body, Reject } = require('../lib/http');
+const { send, fail, body, slugFromReq } = require('../lib/http');
 
 // GET: menú público del local. PUT: guarda el menú (solo el dueño de ese local).
 module.exports = async (req, res) => {
   try {
+    // Sin subdominio ni ?local= es la página principal: el navegador va a la presentación del servicio.
+    if (req.method === 'GET' && !slugFromReq(req)) return send(res, 200, { landing: true }, 'public, max-age=0, s-maxage=60');
     const tenant = await T.requireTenant(req);
     if (req.method === 'GET') {
       const cfg = await getConfig(tenant.slug);
@@ -14,7 +16,6 @@ module.exports = async (req, res) => {
         config: cfg,
         abierto: activo && isOpen(cfg),
         storage: true,
-        mp: Boolean(tenant.mp),
         suspendido: !activo
       }, fresh ? 'no-store' : 'public, max-age=0, s-maxage=10, stale-while-revalidate=30');
     }

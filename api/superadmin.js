@@ -1,6 +1,7 @@
 const redis = require('../lib/redis');
 const cr = require('../lib/crypto');
 const T = require('../lib/tenants');
+const site = require('../lib/site');
 const { rootDomain, send, fail, body, requireSuper, Reject } = require('../lib/http');
 
 function vista(m) {
@@ -8,8 +9,8 @@ function vista(m) {
   return {
     slug: m.slug, nombre: m.nombre, email: m.email,
     activo: m.activo, venceEl: m.venceEl, estado: T.estado(m),
-    mpConectado: Boolean(m.mp), notas: m.notas || '', creado: m.creado,
-    url: root ? 'https://' + m.slug + '.' + root : null
+    notas: m.notas || '', creado: m.creado,
+    url: !root ? null : /\.vercel\.app$/.test(root) ? 'https://' + root + '/?local=' + m.slug : 'https://' + m.slug + '.' + root
   };
 }
 
@@ -25,7 +26,8 @@ module.exports = async (req, res) => {
 
     if (req.method === 'GET') {
       const locales = (await T.listTenants()).map(vista);
-      return send(res, 200, { locales, rootDomain: rootDomain() || null });
+      const [plan, solicitudes] = await Promise.all([site.getPlan(), site.listLeads()]);
+      return send(res, 200, { locales, rootDomain: rootDomain() || null, plan, solicitudes });
     }
     if (req.method !== 'POST') return send(res, 405, { error: 'method' });
 
@@ -33,6 +35,25 @@ module.exports = async (req, res) => {
     if (b.accion === 'crear') {
       const { meta, password } = await T.createTenant(b);
       return send(res, 200, { ok: true, local: vista(meta), password });
+    }
+
+    if (b.accion === 'plan') {
+      const plan = site.sanitizePlan(b.plan);
+      await site.savePlan(plan);
+      return send(res, 200, { ok: true, plan });
+    }
+    if (b.accion === 'solicitud_borrar') {
+      await site.deleteLead(String(b.id || ''));
+      return send(res, 200, { ok: true });
+    }
+    if (b.accion === 'solicitud_aprobar') {
+      const lead = await site.getLead(b.id);
+      if (!lead) throw new Reject('No encontramos esa solicitud.', 404);
+      const { meta, password } = await T.createTenant({ nombre: lead.nombre, slug: b.slug, email: lead.email, venceEl: b.venceEl });
+      lead.estado = 'aprobada';
+      lead.slug = meta.slug;
+      await site.saveLead(lead);
+      return send(res, 200, { ok: true, local: vista(meta), password, whatsapp: lead.whatsapp });
     }
 
     const m = await T.getTenant(String(b.slug || ''));

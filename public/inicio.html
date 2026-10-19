@@ -1,0 +1,197 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Pedidos online para tu hamburguesería</title>
+<meta name="description" content="Tu tienda online con logo y colores propios, pedidos al instante en tu panel y seguimiento para tus clientes. Suscribite y empezá a vender.">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+:root{--bg:#FCFBF8;--surf:#fff;--ink:#2A1608;--mute:#6f5a49;--line:#e0d4c5;--red:#C8261A;--onred:#fff;--hero:#F6B800;--heroink:#2A1608;--ok:#1f7a3d;color-scheme:light}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1B120C;--surf:#281A11;--ink:#F7EBDD;--mute:#c2ad99;--line:#4a3626;--red:#FF5A44;--onred:#1B120C;--ok:#4cc77a;color-scheme:dark}}
+*{box-sizing:border-box}
+html{scroll-behavior:smooth}
+body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "DM Sans",system-ui,sans-serif}
+.w{max-width:980px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
+h1,h2{font-family:"Bowlby One","Arial Black",sans-serif;font-weight:400;line-height:1.02;margin:0;text-wrap:balance}
+h2{font-size:clamp(28px,6vw,40px);margin-bottom:12px}
+a{color:inherit}
+.btn{display:inline-block;background:var(--red);color:var(--onred);border:0;border-radius:12px;padding:14px 22px;font:700 17px/1.1 "DM Sans",system-ui,sans-serif;cursor:pointer;text-decoration:none;text-align:center}
+.btn.ghost{background:transparent;color:inherit;border:2px solid currentColor}
+.top{background:var(--hero);color:var(--heroink)}
+.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px;flex-wrap:wrap}
+.nav b{font:400 20px/1 "Bowlby One","Arial Black",sans-serif}
+.nav a.btn{padding:10px 16px;font-size:15px;background:var(--heroink);color:var(--hero)}
+.hero{padding-block:40px 64px;display:grid;gap:28px;grid-template-columns:1.15fr .85fr;align-items:center}
+.hero h1{font-size:clamp(40px,9vw,76px)}
+.hero p{font-size:19px;max-width:34ch;margin:18px 0 24px}
+.hero .acts{display:flex;gap:12px;flex-wrap:wrap}
+.hero .btn{background:var(--heroink);color:var(--hero)}
+.hero .btn.ghost{background:transparent;color:var(--heroink);border-color:var(--heroink)}
+.mock{background:var(--surf);color:var(--ink);border-radius:22px;padding:16px;box-shadow:0 18px 40px rgba(42,22,8,.22);transform:rotate(1.5deg);min-width:0}
+.mock .mh{display:flex;gap:10px;align-items:center;background:var(--red);color:var(--onred);border-radius:14px;padding:12px 14px;font:400 18px/1 "Bowlby One",sans-serif}
+.mock .mh i{width:34px;height:34px;border-radius:10px;background:#fff;display:block}
+.mock .it{display:flex;justify-content:space-between;gap:10px;padding:11px 2px;border-bottom:1px dashed var(--line);font-weight:700;font-size:15px}
+.mock .it small{display:block;font-weight:400;color:var(--mute)}
+.mock .st{margin-top:12px;display:flex;gap:6px}
+.mock .st span{flex:1;height:7px;border-radius:9px;background:var(--line)}
+.mock .st span.on{background:var(--ok)}
+.mock p{margin:8px 0 0;font-size:14px;color:var(--mute);max-width:none}
+section{padding-block:56px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px;counter-reset:s}
+.steps li{list-style:none;background:var(--surf);border:1.5px solid var(--line);border-radius:16px;padding:20px;counter-increment:s;min-width:0}
+.steps li::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--red);color:var(--onred);font:700 16px/1 system-ui;margin-bottom:12px}
+.steps b{display:block;font-size:19px;margin-bottom:4px}
+.steps p{margin:0;color:var(--mute);font-size:16px}
+.band{background:var(--surf);border-block:1.5px solid var(--line)}
+.plan{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
+.card{background:var(--bg);border:2px solid var(--ink);border-radius:22px;padding:26px;min-width:0}
+.price{font:400 clamp(44px,10vw,64px)/1 "Bowlby One",sans-serif;margin:6px 0 0}
+.price small{font:500 18px "DM Sans",sans-serif;color:var(--mute)}
+.alta{color:var(--mute);margin:6px 0 18px}
+.inc{margin:0;padding:0;display:grid;gap:10px}
+.inc li{list-style:none;display:grid;grid-template-columns:24px 1fr;gap:10px}
+.inc li::before{content:"✓";color:var(--ok);font-weight:700}
+.faq details{border-bottom:1.5px solid var(--line);padding:14px 0}
+.faq summary{cursor:pointer;font-weight:700;font-size:18px}
+.faq p{margin:8px 0 0;color:var(--mute)}
+form{background:var(--surf);border:1.5px solid var(--line);border-radius:20px;padding:22px;display:grid;gap:14px;max-width:560px}
+label{display:block;font-weight:700;font-size:15px}
+label small{font-weight:400;color:var(--mute)}
+input,textarea{display:block;width:100%;margin-top:5px;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+textarea{resize:vertical}
+.hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
+.msg{min-height:1.4em;font-weight:700}
+.msg.err{color:var(--red)}.msg.ok{color:var(--ok)}
+.ok-box{background:var(--surf);border:2px solid var(--ok);border-radius:20px;padding:24px;max-width:560px}
+.ok-box h3{font:400 26px/1.1 "Bowlby One",sans-serif;margin:0 0 8px}
+footer{padding-block:34px;color:var(--mute);font-size:15px}
+footer .w{display:flex;gap:14px;justify-content:space-between;flex-wrap:wrap}
+@media (max-width:760px){.hero,.plan{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.mock{transform:none}section{padding-block:44px}}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+</style>
+</head>
+<body>
+
+<div class="top">
+<div class="w">
+<nav class="nav"><b id="marca">Picture Web Dev</b><a class="btn" href="#suscribirme">Quiero mi tienda</a></nav>
+<div class="hero">
+<div>
+<h1 id="titulo">Tu hamburguesería con pedidos online propios</h1>
+<p>Tus clientes piden desde el celular. Vos recibís el pedido al instante, les mandás el alias por WhatsApp y ellos ven cómo avanza.</p>
+<div class="acts"><a class="btn" href="#suscribirme">Suscribirme</a><a class="btn ghost" href="#plan">Ver el plan</a></div>
+</div>
+<div class="mock" aria-hidden="true">
+<div class="mh"><i></i>Tu Hamburguesería</div>
+<div class="it"><span>Clásica<small>Doble carne, cheddar, pickles</small></span><span>$9.800</span></div>
+<div class="it"><span>Bacon Smash<small>Panceta crocante, barbacoa</small></span><span>$11.500</span></div>
+<div class="st"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
+<p>Pedido #12 · Preparando</p>
+</div>
+</div>
+</div>
+</div>
+
+<section>
+<div class="w">
+<h2>Cómo funciona</h2>
+<ol class="steps" style="padding:0">
+<li><b>Te suscribís</b><p>Completás el formulario de abajo. Revisamos tu solicitud y te escribimos.</p></li>
+<li><b>Armás tu tienda</b><p>Te damos tu usuario. Subís tu logo, elegís tu color y cargás tu menú, tus precios y tus barrios de envío.</p></li>
+<li><b>Empezás a vender</b><p>Compartís el link en Instagram y WhatsApp. Los pedidos te llegan al panel con un aviso sonoro.</p></li>
+</ol>
+</div>
+</section>
+
+<section class="band" id="plan">
+<div class="w plan">
+<div>
+<h2>Un solo plan, todo incluido</h2>
+<p style="color:var(--mute);margin:0">Sin comisión por cada pedido: pagás una mensualidad y vendés todo lo que puedas.</p>
+</div>
+<div class="card">
+<b>Plan completo</b>
+<div class="price" id="precio">…</div>
+<p class="alta" id="alta"></p>
+<ul class="inc" id="incluye"></ul>
+<p style="margin:22px 0 0"><a class="btn" href="#suscribirme" style="display:block">Suscribirme</a></p>
+</div>
+</div>
+</section>
+
+<section class="faq">
+<div class="w">
+<h2>Preguntas frecuentes</h2>
+<details><summary>¿Cómo les llega el pedido?</summary><p>Aparece al instante en tu panel, con un sonido para que no se te pase. Desde ahí lo vas pasando a “preparando”, “listo” y “entregado”, y tu cliente lo ve en su celular.</p></details>
+<details><summary>¿Cómo cobro?</summary><p>Tus clientes eligen efectivo o transferencia. Si eligen transferencia, desde el panel les mandás tu alias por WhatsApp con un toque y ellos te mandan el comprobante por ahí.</p></details>
+<details><summary>¿Cobran comisión por pedido?</summary><p>No. Pagás solamente la mensualidad.</p></details>
+<details><summary>¿Puedo cambiar mi menú y mis precios?</summary><p>Sí, cuando quieras y desde el celular: productos, precios, extras, horarios y costos de envío. También podés marcar algo como agotado por hoy.</p></details>
+<details><summary>¿Tengo mi propio link?</summary><p>Sí. Tu local tiene su propia dirección, con tu logo y tus colores, para compartir donde quieras.</p></details>
+</div>
+</section>
+
+<section class="band" id="suscribirme">
+<div class="w">
+<h2>Suscribite</h2>
+<p style="color:var(--mute);margin:0 0 22px;max-width:50ch">Dejanos los datos de tu local. Revisamos tu solicitud y te escribimos por WhatsApp para dejarla lista y mandarte tu usuario.</p>
+<form id="f" novalidate>
+<label>Nombre de tu local<input id="nombre" maxlength="40" autocomplete="organization" required></label>
+<label>Tu WhatsApp <small>(con código de área, sin 0 ni 15)</small><input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="1155551234" maxlength="20" required></label>
+<label>Tu email <small>(ahí te llegan tus datos)</small><input id="email" type="email" autocomplete="email" maxlength="120" required></label>
+<label>Barrio o ciudad <small>(opcional)</small><input id="zona" maxlength="60"></label>
+<label>¿Algo que quieras contarnos? <small>(opcional)</small><textarea id="mensaje" rows="3" maxlength="300"></textarea></label>
+<div class="hp" aria-hidden="true"><label>No completar<input id="web" tabindex="-1" autocomplete="off"></label></div>
+<p class="msg" id="msg" role="alert"></p>
+<button class="btn" id="go" type="submit">Enviar solicitud</button>
+</form>
+<div class="ok-box" id="ok" hidden>
+<h3>¡Recibimos tu solicitud!</h3>
+<p style="margin:0">Te vamos a escribir por WhatsApp para dejar todo listo. Cuando esté aprobada, te mandamos tu usuario y contraseña.</p>
+</div>
+</div>
+</section>
+
+<footer><div class="w"><span id="pie">Pedidos online para locales gastronómicos</span><span id="contacto"></span></div></footer>
+
+<script>
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+
+function pintarPlan(p){
+  $('#marca').textContent=p.marca;
+  $('#titulo').textContent=p.titulo;
+  document.title=p.marca+' · Pedidos online para tu local';
+  $('#precio').innerHTML=p.precio?esc(p.precio)+' <small>'+esc(p.periodo)+'</small>':'<small style="font-size:26px">Consultá el precio</small>';
+  $('#alta').textContent=p.alta||'';
+  $('#incluye').innerHTML=p.incluye.map(function(x){return '<li>'+esc(x)+'</li>'}).join('');
+  var c=[];
+  if(p.whatsapp)c.push('<a href="https://wa.me/'+esc(p.whatsapp)+'" target="_blank" rel="noopener">WhatsApp</a>');
+  if(p.instagram)c.push('<a href="https://instagram.com/'+esc(p.instagram)+'" target="_blank" rel="noopener">@'+esc(p.instagram)+'</a>');
+  $('#contacto').innerHTML=c.join(' · ');
+}
+fetch('/api/plan').then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.plan)pintarPlan(j.plan)}).catch(function(){
+  $('#precio').innerHTML='<small style="font-size:26px">Consultá el precio</small>';
+});
+
+$('#f').addEventListener('submit',async function(e){
+  e.preventDefault();
+  var m=$('#msg'),b=$('#go');m.className='msg';m.textContent='';
+  var data={nombre:$('#nombre').value.trim(),whatsapp:$('#whatsapp').value.trim(),email:$('#email').value.trim(),zona:$('#zona').value.trim(),mensaje:$('#mensaje').value.trim(),web:$('#web').value};
+  if(data.nombre.length<2){m.className='msg err';m.textContent='Escribí el nombre de tu local.';return}
+  if(data.whatsapp.replace(/\D/g,'').length<10){m.className='msg err';m.textContent='Escribí tu WhatsApp con código de área, por ejemplo 1155551234.';return}
+  if(!/^\S+@\S+\.\S{2,}$/.test(data.email)){m.className='msg err';m.textContent='Escribí un email válido.';return}
+  b.disabled=true;b.textContent='Enviando…';
+  try{
+    var r=await fetch('/api/suscribir',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});
+    var j=await r.json().catch(function(){return null});
+    if(!r.ok){m.className='msg err';m.textContent=(j&&j.mensaje)||'No pudimos enviar la solicitud. Probá de nuevo.';b.disabled=false;b.textContent='Enviar solicitud';return}
+    $('#f').hidden=true;$('#ok').hidden=false;$('#ok').scrollIntoView({behavior:'smooth',block:'center'});
+  }catch(err){m.className='msg err';m.textContent='No pudimos conectar. Revisá tu internet y probá de nuevo.';b.disabled=false;b.textContent='Enviar solicitud'}
+});
+</script>
+</body>
+</html>
