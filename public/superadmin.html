@@ -1,0 +1,173 @@
+<!doctype html>
+<html lang="es-AR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow">
+<title>Panel de locales</title>
+<style>
+:root{--bg:#f6f4ef;--card:#fff;--fg:#1d1b18;--mut:#6b655c;--line:#e3ded4;--acc:#c2410c;--accfg:#fff;--ok:#166534;--okbg:#dcfce7;--bad:#991b1b;--badbg:#fee2e2;--warn:#854d0e;--warnbg:#fef3c7;color-scheme:light}
+@media (prefers-color-scheme:dark){:root{--bg:#161412;--card:#201d1a;--fg:#f1ede6;--mut:#a39c90;--line:#35302a;--acc:#fb923c;--accfg:#1a1107;--ok:#86efac;--okbg:#14301d;--bad:#fca5a5;--badbg:#3a1616;--warn:#fcd34d;--warnbg:#33290d;color-scheme:dark}}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--fg);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif}
+.wrap{max-width:900px;margin:0 auto;padding:16px}
+h1{font-size:1.4rem;margin:8px 0 16px}h2{font-size:1.1rem;margin:0 0 10px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px;margin-bottom:12px;min-width:0}
+.row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
+.row>*{min-width:0}
+.grow{flex:1 1 220px}
+label{display:block;font-size:.85rem;color:var(--mut);margin-bottom:10px}
+input{display:block;width:100%;margin-top:4px;padding:10px;border:1px solid var(--line);border-radius:8px;background:var(--bg);color:var(--fg);font:inherit}
+button{font:inherit;padding:9px 14px;border-radius:8px;border:1px solid var(--acc);background:var(--acc);color:var(--accfg);cursor:pointer}
+button.ghost{background:transparent;color:var(--fg);border-color:var(--line)}
+button.danger{background:transparent;color:var(--bad);border-color:var(--bad)}
+button:disabled{opacity:.5;cursor:default}
+.badge{display:inline-block;padding:2px 9px;border-radius:99px;font-size:.78rem;font-weight:600}
+.b-activo{background:var(--okbg);color:var(--ok)}.b-vencido{background:var(--warnbg);color:var(--warn)}.b-suspendido{background:var(--badbg);color:var(--bad)}
+.mut{color:var(--mut);font-size:.88rem}
+.err{color:var(--bad);min-height:1.2em;margin:6px 0}
+.pw{font:600 1.1rem ui-monospace,Menlo,Consolas,monospace;background:var(--bg);border:1px dashed var(--acc);border-radius:8px;padding:10px;word-break:break-all;user-select:all}
+.loc{display:grid;gap:8px}
+.top{display:flex;gap:8px;align-items:baseline;flex-wrap:wrap}
+a{color:var(--acc)}
+.kpi{display:flex;gap:16px;flex-wrap:wrap;margin-bottom:14px}.kpi b{font-size:1.3rem;display:block}
+</style>
+</head>
+<body>
+<div class="wrap">
+<h1>Panel de locales</h1>
+
+<div id="login" class="card">
+<h2>Entrar</h2>
+<label for="sp">Contraseña de administrador<input id="sp" type="password" autocomplete="current-password"></label>
+<p class="err" id="lerr" role="alert"></p>
+<button id="lgo">Entrar</button>
+</div>
+
+<div id="app" hidden>
+<div class="kpi" id="kpi"></div>
+
+<div class="card">
+<h2>Nuevo local</h2>
+<div class="row">
+<label class="grow">Nombre<input id="nNom" maxlength="40" placeholder="Smash Luján"></label>
+<label class="grow">Dirección (subdominio)<input id="nSlug" maxlength="30" placeholder="smash-lujan"></label>
+</div>
+<div class="row">
+<label class="grow">Email del dueño (su usuario)<input id="nMail" type="email"></label>
+<label class="grow">Vence el (AAAA-MM-DD)<input id="nVence" placeholder="2026-11-19"></label>
+</div>
+<p class="err" id="nerr" role="alert"></p>
+<button id="nGo">Crear local</button>
+<div id="nOut" hidden style="margin-top:12px">
+<p class="mut">Pasale estos datos al dueño. La contraseña se muestra una sola vez.</p>
+<p>Dirección: <b id="oUrl"></b></p><p>Usuario: <b id="oMail"></b></p>
+<div class="pw" id="oPw"></div>
+<div class="row" style="margin-top:8px"><button class="ghost" id="oCopy">Copiar datos</button></div>
+</div>
+</div>
+
+<div id="lista"></div>
+<p><button class="ghost" id="salir">Salir</button></p>
+</div>
+</div>
+
+<script>
+'use strict';
+var $=function(s){return document.querySelector(s)};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var pw='',DATA={locales:[],rootDomain:null},openPw={};
+var st={get:function(k){try{return sessionStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{sessionStorage.setItem(k,v)}catch(e){}},del:function(k){try{sessionStorage.removeItem(k)}catch(e){}}};
+
+async function api(body){
+  var r=await fetch('/api/superadmin',{method:body?'POST':'GET',headers:{'x-super-password':encodeURIComponent(pw),'content-type':'application/json'},body:body?JSON.stringify(body):undefined});
+  var j=await r.json().catch(function(){return null});
+  return {ok:r.ok,status:r.status,j:j||{}};
+}
+function fecha(iso){if(!iso)return 'sin fecha';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+
+async function entrar(){
+  pw=$('#sp').value||st.get('sp')||'';
+  if(!pw){$('#lerr').textContent='Escribí la contraseña.';return}
+  var r=await api();
+  if(!r.ok){$('#lerr').textContent=r.j.mensaje||'Contraseña incorrecta.';st.del('sp');return}
+  st.set('sp',pw);$('#sp').value='';
+  $('#login').hidden=true;$('#app').hidden=false;
+  DATA=r.j;pintar();
+}
+async function recargar(){var r=await api();if(r.ok){DATA=r.j;pintar()}}
+
+function pintar(){
+  var L=DATA.locales.slice().sort(function(a,b){return a.nombre.localeCompare(b.nombre)});
+  var n=function(e){return L.filter(function(l){return l.estado===e}).length};
+  $('#kpi').innerHTML='<div><b>'+L.length+'</b><span class="mut">locales</span></div><div><b>'+n('activo')+'</b><span class="mut">al día</span></div><div><b>'+n('vencido')+'</b><span class="mut">vencidos</span></div><div><b>'+n('suspendido')+'</b><span class="mut">suspendidos</span></div>';
+  if(!DATA.rootDomain)$('#nerr').textContent='Falta definir ROOT_DOMAIN en Vercel: sin eso los locales no tienen subdominio.';
+  $('#lista').innerHTML=L.length?L.map(card).join(''):'<p class="mut">Todavía no cargaste ningún local.</p>';
+}
+function card(l){
+  var s=esc(l.slug);
+  return '<div class="card loc" data-s="'+s+'"><div class="top"><b>'+esc(l.nombre)+'</b><span class="badge b-'+esc(l.estado)+'">'+esc(l.estado)+'</span><span class="mut">vence '+esc(fecha(l.venceEl))+'</span></div>'+
+  '<div class="mut">'+(l.url?'<a href="'+esc(l.url)+'" target="_blank" rel="noopener">'+esc(l.url.replace('https://',''))+'</a>':esc(l.slug))+' · '+esc(l.email)+' · Mercado Pago '+(l.mpConectado?'conectado':'sin conectar')+'</div>'+
+  '<label>Notas<input data-f="notas" maxlength="200" value="'+esc(l.notas)+'"></label>'+
+  (openPw[l.slug]?'<div><p class="mut">Contraseña nueva (se muestra una vez):</p><div class="pw">'+esc(openPw[l.slug])+'</div></div>':'')+
+  '<div class="row"><button data-a="pago">Registrar pago (+1 mes)</button>'+
+  '<button class="ghost" data-a="toggle">'+(l.activo?'Suspender':'Reactivar')+'</button>'+
+  '<button class="ghost" data-a="notas">Guardar notas</button>'+
+  '<button class="ghost" data-a="clave">Nueva contraseña</button>'+
+  '<button class="danger" data-a="borrar">Borrar</button></div>'+
+  '<div class="row"><label class="grow" style="margin:0">Cambiar vencimiento<input data-f="vence" placeholder="AAAA-MM-DD" value="'+esc(l.venceEl||'')+'"></label><button class="ghost" data-a="vence">Cambiar</button></div>'+
+  '<p class="err" data-e></p></div>';
+}
+$('#lista').addEventListener('click',async function(e){
+  var b=e.target.closest('button[data-a]');if(!b)return;
+  var box=b.closest('.card'),slug=box.getAttribute('data-s'),a=b.getAttribute('data-a');
+  var l=DATA.locales.filter(function(x){return x.slug===slug})[0],msg=box.querySelector('[data-e]');
+  msg.textContent='';
+  var req;
+  if(a==='pago')req={accion:'pago',slug:slug,meses:1};
+  else if(a==='toggle')req={accion:'editar',slug:slug,activo:!l.activo};
+  else if(a==='notas')req={accion:'editar',slug:slug,notas:box.querySelector('[data-f=notas]').value};
+  else if(a==='vence')req={accion:'editar',slug:slug,venceEl:box.querySelector('[data-f=vence]').value.trim()};
+  else if(a==='clave'){
+    if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='Tocá de nuevo: cierra su sesión';return}
+    req={accion:'clave',slug:slug};
+  }else if(a==='borrar'){
+    if(b.getAttribute('data-sure')!=='1'){
+      b.setAttribute('data-sure','1');b.textContent='Escribí la dirección y tocá de nuevo';
+      var inp=document.createElement('input');inp.placeholder=slug;inp.setAttribute('data-f','conf');inp.setAttribute('aria-label','Escribí la dirección del local para confirmar');b.parentNode.parentNode.insertBefore(inp,b.parentNode);return;
+    }
+    req={accion:'borrar',slug:slug,confirmar:(box.querySelector('[data-f=conf]')||{}).value||''};
+  }
+  b.disabled=true;
+  var r=await api(req);
+  if(!r.ok){b.disabled=false;msg.textContent=r.j.mensaje||'No se pudo.';return}
+  if(a==='clave')openPw[slug]=r.j.password;
+  await recargar();
+});
+
+$('#nGo').addEventListener('click',async function(){
+  var b=this;$('#nerr').textContent='';$('#nOut').hidden=true;b.disabled=true;
+  var r=await api({accion:'crear',nombre:$('#nNom').value.trim(),slug:$('#nSlug').value.trim().toLowerCase(),email:$('#nMail').value.trim(),venceEl:$('#nVence').value.trim()||undefined});
+  b.disabled=false;
+  if(!r.ok){$('#nerr').textContent=r.j.mensaje||'No se pudo crear.';return}
+  $('#oUrl').textContent=r.j.local.url||r.j.local.slug;$('#oMail').textContent=r.j.local.email;$('#oPw').textContent=r.j.password;
+  $('#nOut').hidden=false;
+  ['#nNom','#nSlug','#nMail','#nVence'].forEach(function(s){$(s).value=''});
+  await recargar();
+});
+$('#oCopy').addEventListener('click',function(){
+  var t='Tu panel: '+$('#oUrl').textContent+'/admin\nUsuario: '+$('#oMail').textContent+'\nContraseña: '+$('#oPw').textContent;
+  try{navigator.clipboard.writeText(t).then(function(){$('#oCopy').textContent='Copiado'})}catch(e){}
+});
+$('#nNom').addEventListener('input',function(){
+  var s=$('#nSlug');if(s.getAttribute('data-touched'))return;
+  s.value=this.value.toLowerCase().normalize('NFD').replace(/[̀-ͯ]/g,'').replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'').slice(0,30);
+});
+$('#nSlug').addEventListener('input',function(){this.setAttribute('data-touched','1')});
+$('#lgo').addEventListener('click',entrar);
+$('#sp').addEventListener('keydown',function(e){if(e.key==='Enter')entrar()});
+$('#salir').addEventListener('click',function(){st.del('sp');location.reload()});
+if(st.get('sp'))entrar();
+</script>
+</body>
+</html>

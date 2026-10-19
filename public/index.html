@@ -1,0 +1,949 @@
+<!doctype html>
+<html lang="es">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>Smash Luján · Pedí online</title>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Sans:wght@400;500;700&display=swap">
+<style>
+/* Tienda: encabezado amarillo mostaza, fondo papel, rojo ketchup para las acciones.
+   Panel (/admin): mismas piezas, en una sola columna pensada para el celular del dueño. */
+:root{--bg:#FCFBF8;--surf:#fff;--ink:#2A1608;--mute:#6f5a49;--line:#d9cdbf;--red:#C8261A;--onred:#fff;--hero:#F6B800;--heroink:#2A1608;--ok:#1f7a3d;
+box-sizing:border-box;padding-top:env(safe-area-inset-top,0px);padding-bottom:env(safe-area-inset-bottom,0px)}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1B120C;--surf:#281A11;--ink:#F7EBDD;--mute:#c2ad99;--line:#4a3626;--red:#FF5A44;--onred:#1B120C;--ok:#4cc77a;color-scheme:dark}}
+:root[data-theme="dark"]{--bg:#1B120C;--surf:#281A11;--ink:#F7EBDD;--mute:#c2ad99;--line:#4a3626;--red:#FF5A44;--onred:#1B120C;--ok:#4cc77a;color-scheme:dark}
+*{box-sizing:border-box}
+[hidden]{display:none!important}
+html{background:var(--hero);scroll-padding-top:env(safe-area-inset-top,0px)}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 "DM Sans",system-ui,sans-serif;padding-bottom:96px;min-height:100vh}
+.wrap{max-width:720px;margin:0 auto;padding:0 18px}
+header{background:var(--hero);color:var(--heroink);padding:36px 0 30px}
+h1{font:400 clamp(44px,12vw,84px)/.95 "Bowlby One","Arial Black",sans-serif;margin:0 0 14px;letter-spacing:-.01em}
+header p{margin:0 0 16px;font-size:18px;max-width:34ch}
+.pill{display:inline-block;padding:6px 14px;border-radius:99px;font-weight:700;font-size:14px;background:var(--heroink);color:#fff}
+.pill.closed{background:#fff;color:#C8261A}
+h2{font:400 26px/1.1 "Bowlby One","Arial Black",sans-serif;margin:34px 0 6px}
+.item{display:grid;grid-template-columns:1fr auto;gap:2px 12px;padding:14px 0;border-bottom:1px dashed var(--line)}
+.item.off{opacity:.45}
+.nm{display:flex;align-items:baseline;gap:8px;font-weight:700;font-size:18px}
+.nm i{flex:1;border-bottom:2px dotted var(--line);transform:translateY(-4px);min-width:16px}
+.ds{grid-column:1;color:var(--mute);font-size:15px;margin:0;min-width:0}
+.item button{grid-row:1/3;grid-column:2;align-self:end}
+button,select,input,textarea{font:inherit;color:inherit}
+.btn{background:var(--red);color:var(--onred);border:0;border-radius:10px;padding:10px 16px;font-weight:700;cursor:pointer;text-decoration:none;display:inline-block;text-align:center}
+.btn.ghost{background:transparent;color:var(--ink);border:1.5px solid var(--line)}
+.btn.block{display:block;width:100%;padding:14px;font-size:17px}
+.btn:disabled{opacity:.5;cursor:not-allowed}
+:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+#bar{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1.5px solid var(--line);padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));display:none;z-index:5}
+#bar .btn{width:100%;max-width:684px;display:block;margin:0 auto;padding:14px;font-size:17px}
+dialog{border:0;border-radius:16px;background:var(--surf);color:var(--ink);width:min(560px,calc(100% - 20px));max-height:calc(100% - 20px);padding:0}
+dialog::backdrop{background:rgba(20,10,4,.6)}
+.dh{display:flex;justify-content:space-between;align-items:center;padding:16px 18px;border-bottom:1px solid var(--line);position:sticky;top:0;background:var(--surf);z-index:1}
+.dh h3{margin:0;font-size:20px}
+.db{padding:6px 18px 18px}
+fieldset{border:0;padding:0;margin:14px 0 0;min-width:0}
+legend{font-weight:700;margin-bottom:6px;padding:0}
+label.o{display:flex;justify-content:space-between;gap:10px;padding:9px 0;border-bottom:1px solid var(--line);cursor:pointer}
+label.o span:first-child{display:flex;gap:10px;align-items:center}
+input[type=radio],input[type=checkbox]{accent-color:var(--red);width:19px;height:19px;flex:none}
+.f{display:block;margin-top:12px;font-weight:500;font-size:15px}
+.f input,.f select,.f textarea{display:block;width:100%;margin-top:4px;padding:11px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg)}
+.ci{display:grid;grid-template-columns:1fr auto;gap:2px 10px;padding:10px 0;border-bottom:1px dashed var(--line)}
+.ci small{color:var(--mute);grid-column:1}
+.q{display:flex;align-items:center;gap:8px;grid-row:1/3;grid-column:2}
+.q button{width:32px;height:32px;border-radius:8px;border:1.5px solid var(--line);background:transparent;cursor:pointer;font-weight:700}
+.tot{display:flex;justify-content:space-between;padding:4px 0}
+.tot.big{font-weight:700;font-size:20px;border-top:2px solid var(--ink);margin-top:8px;padding-top:10px}
+.err{color:var(--red);font-weight:700;margin:10px 0 0;min-height:1.2em}
+.note{color:var(--mute);font-size:14px;margin-top:8px}
+.banner{background:var(--surf);border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin:16px 0;font-size:15px}
+footer{padding:30px 0;color:var(--mute);font-size:14px}
+/* Panel de administración */
+.adm{padding-bottom:90px}
+.adm input:not([type=checkbox]),.adm textarea,.adm select{display:block;width:100%;padding:10px 12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg)}
+.adm h4{margin:24px 0 8px;font-size:18px}
+.ar{display:grid;gap:8px;padding:14px 0;border-bottom:1px dashed var(--line)}
+.ar label{display:flex;gap:8px;align-items:center}
+.ar label.f{display:block;margin-top:0}
+.ad{display:grid;grid-template-columns:1fr 110px auto;gap:8px;margin-top:8px}
+.ad2{display:grid;grid-template-columns:1fr auto;gap:8px;margin-top:8px}
+.ah{background:var(--hero);color:var(--heroink);padding:16px 0}
+.ahr{display:flex;justify-content:space-between;align-items:center;gap:12px;font-size:20px;font-weight:700}
+.tabs{display:flex;gap:6px;margin:16px 0 4px;overflow-x:auto}
+.tabs button{flex:1;padding:10px 8px;border:1.5px solid var(--line);background:transparent;border-radius:10px;font-weight:700;cursor:pointer;white-space:nowrap}
+.tabs button[aria-selected=true]{background:var(--ink);color:var(--bg);border-color:var(--ink)}
+.cat{margin-top:22px}
+.it{border-bottom:1px dashed var(--line);padding:6px 0}
+.it summary{cursor:pointer;display:flex;justify-content:space-between;gap:8px;font-weight:700;padding:8px 0}
+.mini{display:flex;gap:6px}
+.mini .btn{padding:8px 12px}
+.chk{display:flex;gap:8px;align-items:center;font-weight:500}
+.days{display:flex;flex-wrap:wrap;gap:6px 16px;margin:6px 0}
+.hrs{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.oc{border:1.5px solid var(--line);border-radius:12px;padding:12px 14px;margin:12px 0;background:var(--surf)}
+.oc.new{border-color:var(--red);box-shadow:0 0 0 2px var(--red)}
+.oc.mute{opacity:.6}
+.oc p{margin:4px 0}
+.oc ul{margin:6px 0;padding-left:18px}
+.oh{display:flex;gap:8px;align-items:center;flex-wrap:wrap}
+.badge{font-size:13px;font-weight:700;padding:2px 10px;border-radius:99px;background:var(--line);color:var(--ink)}
+.badge.ok{background:var(--ok);color:#fff}
+.badge.warn{background:var(--hero);color:var(--heroink)}
+.badge.bad{background:var(--red);color:var(--onred)}
+.acts{display:flex;gap:8px;flex-wrap:wrap;margin-top:10px}
+.savebar{position:fixed;left:0;right:0;bottom:0;background:var(--surf);border-top:1.5px solid var(--line);padding:12px 18px calc(12px + env(safe-area-inset-bottom,0px));display:flex;gap:12px;align-items:center;justify-content:space-between;z-index:6}
+@media (max-width:420px){.ad{grid-template-columns:1fr 92px auto}}
+@media (prefers-reduced-motion:no-preference){.btn:active{transform:scale(.97)}}
+</style>
+</head>
+<body>
+
+<div id="tienda">
+<header><div class="wrap">
+<h1 id="nombre"></h1>
+<p id="desc"></p>
+<span class="pill" id="estado"></span>
+</div></header>
+<main class="wrap" id="menu"></main>
+<footer class="wrap" id="pie"></footer>
+<div id="bar"><button class="btn" id="verPedido"></button></div>
+</div>
+
+<dialog id="dProd"><div class="dh"><h3 id="pNom"></h3><button class="btn ghost" data-close aria-label="Cerrar">Cerrar</button></div>
+<div class="db"><p id="pDesc" class="note" style="margin:10px 0 0"></p>
+<fieldset id="pExFs"><legend>Extras</legend><div id="pExtras"></div></fieldset>
+<label class="f" for="pNota">Aclaraciones (sin cebolla, salsa aparte…)<textarea id="pNota" rows="2" maxlength="120"></textarea></label>
+<button class="btn block" id="pAdd" style="margin-top:16px"></button></div></dialog>
+
+<dialog id="dPed"><div class="dh"><h3>Tu pedido</h3><button class="btn ghost" data-close aria-label="Cerrar">Cerrar</button></div>
+<div class="db"><p class="note" id="cNotaCarrito" hidden></p><div id="lista"></div>
+<fieldset><legend>¿Cómo lo recibís?</legend>
+<label class="o"><span><input type="radio" name="modo" value="retiro" checked> Retiro en el local</span><span>Sin costo</span></label>
+<label class="o" id="oDel"><span><input type="radio" name="modo" value="delivery"> Delivery</span><span>Según barrio</span></label></fieldset>
+<label class="f" for="cNom">Nombre<input id="cNom" autocomplete="name" maxlength="60"></label>
+<label class="f" for="cTel">Teléfono<input id="cTel" type="tel" autocomplete="tel" inputmode="tel" maxlength="30"></label>
+<div id="dirBox" hidden>
+<label class="f" for="cZona">Barrio<select id="cZona"></select></label>
+<label class="f" for="cDir">Dirección (calle, número, piso/depto)<input id="cDir" autocomplete="street-address" maxlength="120"></label></div>
+<fieldset><legend>Forma de pago</legend>
+<label class="o" id="oMp" hidden><span><input type="radio" name="pago" value="mp"> Mercado Pago</span><span>Tarjeta, dinero en cuenta, QR</span></label>
+<label class="o"><span><input type="radio" name="pago" value="efectivo" checked> Efectivo</span></label>
+<label class="o"><span><input type="radio" name="pago" value="transferencia"> Transferencia</span></label></fieldset>
+<label class="f" id="cambioBox" for="cCambio">Si pagás en efectivo, ¿con cuánto abonás?<input id="cCambio" inputmode="numeric" placeholder="Opcional" maxlength="20"></label>
+<p class="note" id="tNota" hidden></p>
+<label class="f" for="cNota">Notas para el local<textarea id="cNota" rows="2" maxlength="200"></textarea></label>
+<div style="margin-top:16px"><div class="tot"><span>Subtotal</span><span id="tSub"></span></div>
+<div class="tot"><span>Envío</span><span id="tEnv"></span></div>
+<div class="tot big"><span>Total</span><span id="tTot"></span></div></div>
+<p class="err" id="err" role="alert"></p>
+<button class="btn block" id="enviar"></button>
+<p class="note" id="pieEnviar"></p></div></dialog>
+
+<dialog id="dOk"><div class="dh"><h3 id="okTit"></h3></div>
+<div class="db"><p id="okTxt"></p><div id="okAcc" style="display:grid;gap:10px;margin-top:14px"></div></div></dialog>
+
+<div id="admin" class="adm" hidden>
+<header class="ah"><div class="wrap ahr"><span id="aTitulo">Panel del local</span><button class="btn ghost" id="aSalir" hidden>Salir</button></div></header>
+<div class="wrap" id="aLogin">
+<h2>Entrar al panel</h2>
+<label class="f" for="aEmail">Email<input type="email" id="aEmail" autocomplete="username"></label>
+<label class="f" for="aPass">Contraseña<input type="password" id="aPass" autocomplete="current-password"></label>
+<p class="err" id="aErr" role="alert"></p>
+<button class="btn" id="aEntrar">Entrar</button>
+</div>
+<div class="wrap" id="aApp" hidden>
+<nav class="tabs" id="aTabs">
+<button data-tab="pedidos" aria-selected="true">Pedidos</button>
+<button data-tab="menu" aria-selected="false">Menú</button>
+<button data-tab="extras" aria-selected="false">Extras</button>
+<button data-tab="local" aria-selected="false">Local</button>
+<button data-tab="cuenta" aria-selected="false">Cuenta</button>
+</nav>
+<section id="t-pedidos"></section>
+<section id="t-menu" hidden></section>
+<section id="t-extras" hidden></section>
+<section id="t-local" hidden></section>
+<section id="t-cuenta" hidden></section>
+</div>
+<div class="savebar" id="aSave" hidden><span id="aMsg" role="status"></span><button class="btn" id="aGuardar" disabled>Guardar cambios</button></div>
+</div>
+
+<script>
+'use strict';
+var DEFAULT_CONFIG={
+  "nombre": "Smash Luján",
+  "descripcion": "Hamburguesas smash, hechas al momento. Retirás en el local o te las llevamos.",
+  "whatsapp": "5491100000000",
+  "alias": "",
+  "pausado": false,
+  "aceptaMP": true,
+  "horario": {
+    "dias": [
+      3,
+      4,
+      5,
+      6,
+      0
+    ],
+    "desde": 20,
+    "hasta": 24
+  },
+  "zonas": [
+    {
+      "id": "z1",
+      "nom": "Centro",
+      "costo": 1500
+    },
+    {
+      "id": "z2",
+      "nom": "Pueblo Nuevo",
+      "costo": 2000
+    },
+    {
+      "id": "z3",
+      "nom": "Parque Ayerza",
+      "costo": 2500
+    },
+    {
+      "id": "z4",
+      "nom": "Open Door",
+      "costo": 3000
+    }
+  ],
+  "extras": [
+    {
+      "id": "e1",
+      "nom": "Extra carne",
+      "precio": 2800
+    },
+    {
+      "id": "e2",
+      "nom": "Panceta",
+      "precio": 1500
+    },
+    {
+      "id": "e3",
+      "nom": "Cheddar",
+      "precio": 1000
+    },
+    {
+      "id": "e4",
+      "nom": "Huevo frito",
+      "precio": 1000
+    },
+    {
+      "id": "e5",
+      "nom": "Papas y gaseosa",
+      "precio": 6000
+    }
+  ],
+  "categorias": [
+    {
+      "id": "c1",
+      "nom": "Hamburguesas"
+    },
+    {
+      "id": "c2",
+      "nom": "Papas"
+    },
+    {
+      "id": "c3",
+      "nom": "Bebidas"
+    }
+  ],
+  "menu": [
+    {
+      "id": "cla",
+      "cat": "c1",
+      "nom": "Clásica",
+      "desc": "Doble carne smash, cheddar, pickles y salsa de la casa.",
+      "precio": 9800,
+      "extras": true,
+      "off": false
+    },
+    {
+      "id": "bbq",
+      "cat": "c1",
+      "nom": "Bacon BBQ",
+      "desc": "Doble carne, panceta crocante, cheddar, cebolla caramelizada y BBQ.",
+      "precio": 11500,
+      "extras": true,
+      "off": false
+    },
+    {
+      "id": "bas",
+      "cat": "c1",
+      "nom": "La Basílica",
+      "desc": "Triple carne, provoleta, huevo, panceta y criolla.",
+      "precio": 13800,
+      "extras": true,
+      "off": false
+    },
+    {
+      "id": "vegi",
+      "cat": "c1",
+      "nom": "Veggie",
+      "desc": "Medallón de lentejas y garbanzos, rúcula, tomate y mayo de ajo.",
+      "precio": 9500,
+      "extras": true,
+      "off": false
+    },
+    {
+      "id": "pap",
+      "cat": "c2",
+      "nom": "Papas clásicas",
+      "desc": "Porción grande, con sal marina.",
+      "precio": 4500,
+      "extras": false,
+      "off": false
+    },
+    {
+      "id": "pch",
+      "cat": "c2",
+      "nom": "Papas cheddar y panceta",
+      "desc": "Bañadas en cheddar con panceta crocante.",
+      "precio": 6500,
+      "extras": false,
+      "off": false
+    },
+    {
+      "id": "gas",
+      "cat": "c3",
+      "nom": "Gaseosa",
+      "desc": "Línea Coca-Cola, 500 ml.",
+      "precio": 2500,
+      "extras": false,
+      "off": false
+    },
+    {
+      "id": "cer",
+      "cat": "c3",
+      "nom": "Cerveza artesanal",
+      "desc": "Pinta rubia o IPA, consultá cuál hay.",
+      "precio": 4500,
+      "extras": false,
+      "off": false
+    },
+    {
+      "id": "agu",
+      "cat": "c3",
+      "nom": "Agua",
+      "desc": "Sin gas, 500 ml.",
+      "precio": 1800,
+      "extras": false,
+      "off": false
+    }
+  ]
+};
+
+var $=function(s,r){return (r||document).querySelector(s)};
+var $$=function(s,r){return Array.prototype.slice.call((r||document).querySelectorAll(s))};
+var money=function(n){return '$'+Number(n).toLocaleString('es-AR')};
+var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
+var clone=function(o){return JSON.parse(JSON.stringify(o))};
+var sleep=function(ms){return new Promise(function(r){setTimeout(r,ms)})};
+var DIAS=['domingo','lunes','martes','miércoles','jueves','viernes','sábado'];
+var TZ='America/Argentina/Buenos_Aires';
+var pad=function(n){return (n<10?'0':'')+n+':00'};
+var store={get:function(k){try{return localStorage.getItem(k)}catch(e){return null}},set:function(k,v){try{localStorage.setItem(k,v)}catch(e){}},del:function(k){try{localStorage.removeItem(k)}catch(e){}}};
+
+/* ---------- Horario (hora de Argentina, igual que el servidor) ---------- */
+function nowAR(d){
+  var parts=new Intl.DateTimeFormat('en-US',{timeZone:TZ,weekday:'short',hour:'numeric',minute:'numeric',hourCycle:'h23'}).formatToParts(d||new Date());
+  var g=function(t){return parts.filter(function(p){return p.type===t})[0].value};
+  return {dow:{Sun:0,Mon:1,Tue:2,Wed:3,Thu:4,Fri:5,Sat:6}[g('weekday')],h:Number(g('hour'))+Number(g('minute'))/60};
+}
+function isOpen(cfg){
+  if(cfg.pausado)return false;
+  var hr=cfg.horario,n=nowAR();
+  if(hr.desde<hr.hasta)return hr.dias.indexOf(n.dow)>-1&&n.h>=hr.desde&&n.h<hr.hasta;
+  return (hr.dias.indexOf(n.dow)>-1&&n.h>=hr.desde)||(hr.dias.indexOf((n.dow+6)%7)>-1&&n.h<hr.hasta);
+}
+function diasTxt(dias){return dias.slice().sort(function(a,b){return ((a+6)%7)-((b+6)%7)}).map(function(x){return DIAS[x].slice(0,3)}).join(', ')}
+
+/* ---------- Estado de la tienda ---------- */
+var S={cfg:null,api:false,mp:false,abierto:true,cart:[],suspendido:false};
+var apiMode=function(){return S.api};
+var mpMode=function(){return S.api&&S.mp&&S.cfg.aceptaMP};
+var LOCAL=(new URLSearchParams(location.search).get('local')||'').toLowerCase().replace(/[^a-z0-9-]/g,'');
+function apiUrl(path){if(!LOCAL)return path;return path+(path.indexOf('?')>-1?'&':'?')+'local='+encodeURIComponent(LOCAL)}
+var isAdminRoute=location.pathname.replace(/\/+$/,'')==='/admin'||location.hash==='#admin';
+
+async function cargarConfig(fresh){
+  try{
+    var r=await fetch(apiUrl('/api/menu'+(fresh?'?fresh=1':'')),{headers:{accept:'application/json'}});
+    if(r.status===404){var j0=await r.json().catch(function(){return null});if(j0&&j0.error==='local_no_encontrado')return 'nolocal'}
+    if(r.ok){
+      var j=await r.json();
+      if(j&&j.config&&Array.isArray(j.config.menu)){
+        S.cfg=j.config;S.api=!!j.storage;S.mp=!!j.mp;S.abierto=!!j.abierto;S.suspendido=!!j.suspendido;S.storage=!!j.storage;S.hasApi=true;
+        return 'ok';
+      }
+    }else if(r.status>=500)return 'error';
+  }catch(e){}
+  /* Sin servidor (vista previa): menú de ejemplo y pedidos solo por WhatsApp. */
+  S.cfg=clone(DEFAULT_CONFIG);S.api=false;S.mp=false;S.suspendido=false;S.abierto=isOpen(S.cfg);S.hasApi=false;
+  return 'demo';
+}
+
+function renderEstado(){
+  var c=S.cfg,h=c.horario,el=$('#estado');
+  el.className='pill'+(S.abierto?'':' closed');
+  el.textContent=S.suspendido?'Este local no está tomando pedidos por ahora':S.abierto?'Abierto hasta las '+pad(h.hasta%24):(c.pausado?'Por ahora no tomamos pedidos':'Cerrado ahora: abrimos desde las '+pad(h.desde)+' ('+diasTxt(h.dias)+')');
+}
+
+function renderMenu(){
+  var c=S.cfg,html='';
+  c.categorias.forEach(function(cat){
+    var items=c.menu.filter(function(p){return p.cat===cat.id});
+    if(!items.length)return;
+    html+='<h2>'+esc(cat.nom)+'</h2>';
+    items.forEach(function(p){
+      html+='<div class="item'+(p.off?' off':'')+'"><div class="nm"><span>'+esc(p.nom)+'</span><i></i><span>'+money(p.precio)+'</span></div><p class="ds">'+esc(p.desc)+'</p>'+
+      (p.off?'<button class="btn ghost" disabled>Agotado</button>':'<button class="btn" data-add="'+esc(p.id)+'">Agregar</button>')+'</div>';
+    });
+  });
+  $('#menu').innerHTML=html;
+}
+
+function pintarTienda(){
+  var c=S.cfg;
+  $('#nombre').textContent=c.nombre;
+  $('#desc').textContent=c.descripcion||'';
+  document.title=c.nombre;
+  $('#pie').textContent=apiMode()?'Tu pedido le llega al local al instante y te confirman el tiempo de espera.':'Tu pedido se envía por WhatsApp al local y ellos te lo confirman con el tiempo de espera.';
+  $('#oMp').hidden=!mpMode();
+  var sel=$('input[name=pago]:checked');
+  if(!mpMode()&&sel&&sel.value==='mp')$('input[name=pago][value=efectivo]').checked=true;
+  var zsel=$('#cZona').value;
+  $('#cZona').innerHTML=c.zonas.map(function(z){return '<option value="'+esc(z.id)+'">'+esc(z.nom)+' (+'+money(z.costo)+')</option>'}).join('');
+  if(zsel&&c.zonas.some(function(z){return z.id===zsel}))$('#cZona').value=zsel;
+  $('#oDel').hidden=!c.zonas.length;
+  if(!c.zonas.length)$('input[name=modo][value=retiro]').checked=true;
+  renderEstado();renderMenu();normalizeCart();renderCart();
+}
+
+/* Mantiene al día si el local está abierto, sin molestar si el cliente está armando el pedido. */
+async function refrescar(){
+  if($('#dPed').open||$('#dProd').open||$('#dOk').open||document.visibilityState!=='visible')return;
+  if(S.hasApi){if((await cargarConfig(false))==='ok')pintarTienda()}
+  else{S.abierto=isOpen(S.cfg);renderEstado();renderCart()}
+}
+
+/* ---------- Carrito ---------- */
+var prod=function(id){return S.cfg.menu.filter(function(p){return p.id===id})[0]};
+var extraById=function(id){return S.cfg.extras.filter(function(x){return x.id===id})[0]};
+function saveCart(){store.set('cart2',JSON.stringify(S.cart))}
+function loadCart(){try{var c=JSON.parse(store.get('cart2')||'[]');return Array.isArray(c)?c:[]}catch(e){return[]}}
+
+/* Cada línea se calcula con los precios actuales del menú. */
+function lines(){
+  return S.cart.map(function(i,idx){
+    var p=prod(i.pid);if(!p||p.off)return null;
+    var unit=p.precio,names=[];
+    for(var k=0;k<i.ex.length;k++){var x=extraById(i.ex[k]);if(!x)return null;unit+=x.precio;names.push(x.nom)}
+    return {i:i,idx:idx,p:p,unit:unit,names:names};
+  }).filter(Boolean);
+}
+function normalizeCart(){
+  var ok=lines().map(function(l){return l.i});
+  var removed=S.cart.length-ok.length;
+  if(removed>0){S.cart=ok;saveCart();var n=$('#cNotaCarrito');n.textContent='Quitamos de tu pedido algunos productos que ya no están disponibles.';n.hidden=false}
+}
+function addItem(pid,ex,nota){
+  ex=ex.slice().sort();
+  var f=S.cart.filter(function(i){return i.pid===pid&&i.ex.join()===ex.join()&&i.nota===nota})[0];
+  if(f)f.qty++;else S.cart.push({pid:pid,ex:ex,nota:nota,qty:1});
+  saveCart();renderCart();
+}
+function sub(){return lines().reduce(function(s,l){return s+l.unit*l.i.qty},0)}
+function modo(){return $('input[name=modo]:checked').value}
+function zonaSel(){return S.cfg.zonas.filter(function(z){return z.id===$('#cZona').value})[0]}
+function envio(){if(modo()!=='delivery')return 0;var z=zonaSel();return z?z.costo:0}
+function pago(){return $('input[name=pago]:checked').value}
+
+function renderCart(){
+  var ls=lines(),n=ls.reduce(function(s,l){return s+l.i.qty},0);
+  $('#bar').style.display=n?'block':'none';
+  $('#verPedido').textContent='Ver pedido ('+n+') · '+money(sub());
+  $('#lista').innerHTML=ls.length?ls.map(function(l){
+    var det=[];if(l.names.length)det.push('Extras: '+l.names.join(', '));if(l.i.nota)det.push('Nota: '+l.i.nota);
+    return '<div class="ci"><b>'+esc(l.p.nom)+'</b><div class="q"><button data-m="'+l.idx+'" aria-label="Quitar uno">−</button><span>'+l.i.qty+'</span><button data-p="'+l.idx+'" aria-label="Sumar uno">+</button></div><small>'+esc(det.join(' · '))+(det.length?' · ':'')+money(l.unit*l.i.qty)+'</small></div>';
+  }).join(''):'<p class="note">Todavía no agregaste nada. Elegí algo del menú.</p>';
+  $('#dirBox').hidden=modo()!=='delivery';
+  $('#cambioBox').hidden=pago()!=='efectivo';
+  var tn=$('#tNota');
+  if(pago()==='transferencia'){tn.hidden=false;tn.textContent=S.cfg.alias?'Alias para transferir: '+S.cfg.alias+'. Mandanos el comprobante por WhatsApp.':'Te pasamos el alias por WhatsApp para que transfieras.'}else tn.hidden=true;
+  var t=sub()+envio();
+  $('#tSub').textContent=money(sub());$('#tEnv').textContent=envio()?money(envio()):'—';$('#tTot').textContent=money(t);
+  var b=$('#enviar'),cerrado=apiMode()&&!S.abierto;
+  b.disabled=cerrado||!ls.length;
+  b.textContent=cerrado?'El local está cerrado':pago()==='mp'?'Pagar con Mercado Pago · '+money(t):apiMode()?'Confirmar pedido · '+money(t):'Enviar pedido por WhatsApp';
+  $('#pieEnviar').textContent=pago()==='mp'?'Vas a pasar a Mercado Pago para pagar. Cuando termines volvés acá.':apiMode()?'El local recibe tu pedido al instante. Después podés avisarles también por WhatsApp.':'Al tocar el botón se abre WhatsApp con tu pedido ya escrito. Solo falta enviarlo.';
+}
+
+/* ---------- Producto con extras ---------- */
+var cur=null;
+function calcProd(){
+  var t=cur.precio;
+  $$('#pExtras input:checked').forEach(function(c){var x=extraById(c.value);if(x)t+=x.precio});
+  $('#pAdd').textContent='Agregar al pedido · '+money(t);
+}
+$('#menu').addEventListener('click',function(e){
+  var id=e.target.getAttribute('data-add');if(!id)return;
+  var p=prod(id);if(!p)return;
+  if(!p.extras){addItem(p.id,[],'');return}
+  cur=p;$('#pNom').textContent=p.nom;$('#pDesc').textContent=p.desc;$('#pNota').value='';
+  $('#pExFs').hidden=!S.cfg.extras.length;
+  $('#pExtras').innerHTML=S.cfg.extras.map(function(x){return '<label class="o"><span><input type="checkbox" value="'+esc(x.id)+'"> '+esc(x.nom)+'</span><span>+'+money(x.precio)+'</span></label>'}).join('');
+  calcProd();$('#dProd').showModal();
+});
+$('#dProd').addEventListener('change',calcProd);
+$('#pAdd').addEventListener('click',function(){
+  addItem(cur.id,$$('#pExtras input:checked').map(function(c){return c.value}),$('#pNota').value.trim());
+  $('#dProd').close();
+});
+$$('[data-close]').forEach(function(b){b.addEventListener('click',function(){b.closest('dialog').close()})});
+
+$('#lista').addEventListener('click',function(e){
+  var m=e.target.getAttribute('data-m'),p=e.target.getAttribute('data-p');
+  if(p!==null)S.cart[p].qty++;
+  if(m!==null&&--S.cart[m].qty<1)S.cart.splice(m,1);
+  saveCart();renderCart();if(!S.cart.length)$('#dPed').close();
+});
+$('#verPedido').addEventListener('click',function(){$('#err').textContent='';$('#dPed').showModal()});
+$('#dPed').addEventListener('change',renderCart);
+
+/* ---------- Pantalla de confirmación ---------- */
+function showOk(titulo,texto,botones){
+  $('#okTit').textContent=titulo;$('#okTxt').textContent=texto;
+  $('#okAcc').innerHTML=botones.map(function(b,i){
+    var cls='btn block'+(b.ghost?' ghost':'');
+    return b.href?'<a class="'+cls+'" href="'+esc(b.href)+'" target="_blank" rel="noopener">'+esc(b.txt)+'</a>':'<button class="'+cls+'" data-ok="'+i+'">'+esc(b.txt)+'</button>';
+  }).join('');
+  $$('#okAcc [data-ok]').forEach(function(el){el.onclick=function(){botones[+el.getAttribute('data-ok')].fn()}});
+  if(!$('#dOk').open)$('#dOk').showModal();
+}
+var cerrarOk=function(){$('#dOk').close()};
+$('#dOk').addEventListener('cancel',function(e){if($('#okTit').textContent.indexOf('Confirmando')===0)e.preventDefault()});
+
+function waUrl(texto){return 'https://wa.me/'+S.cfg.whatsapp+'?text='+encodeURIComponent(texto)}
+
+function mensaje(numero,pagoTxt){
+  var L=['*Pedido nuevo'+(numero?' #'+numero:'')+' – '+S.cfg.nombre+'*',''];
+  lines().forEach(function(l){
+    L.push(l.i.qty+'x '+l.p.nom+' – '+money(l.unit*l.i.qty));
+    var det=[];if(l.names.length)det.push('Extras: '+l.names.join(', '));if(l.i.nota)det.push('Nota: '+l.i.nota);
+    if(det.length)L.push('   '+det.join(' · '));
+  });
+  var z=zonaSel(),d=modo()==='delivery';
+  L.push('','Subtotal: '+money(sub()));
+  if(d)L.push('Envío ('+z.nom+'): '+money(envio()));
+  L.push('*Total: '+money(sub()+envio())+'*','');
+  L.push(d?'Entrega: delivery a '+$('#cDir').value.trim()+', '+z.nom:'Entrega: retiro en el local');
+  L.push('Nombre: '+$('#cNom').value.trim(),'Teléfono: '+$('#cTel').value.trim(),'Pago: '+pagoTxt);
+  if(pago()==='efectivo'&&$('#cCambio').value.trim())L.push('Abona con: $'+$('#cCambio').value.trim());
+  if($('#cNota').value.trim())L.push('Notas: '+$('#cNota').value.trim());
+  if(!apiMode()&&!S.abierto)L.push('','(Pedido enviado con el local cerrado, para cuando abran)');
+  return L.join('\n');
+}
+
+function vaciar(){S.cart=[];saveCart();renderCart()}
+
+/* ---------- Enviar el pedido ---------- */
+$('#enviar').addEventListener('click',async function(){
+  var d=modo()==='delivery',err='',ls=lines();
+  if(!ls.length)err='Agregá al menos un producto.';
+  else if($('#cNom').value.trim().length<2)err='Escribí tu nombre.';
+  else if($('#cTel').value.replace(/\D/g,'').length<8)err='Escribí un teléfono válido para avisarte.';
+  else if(d&&!$('#cDir').value.trim())err='Escribí la dirección de entrega.';
+  $('#err').textContent=err;if(err)return;
+  var P=pago(),pagoTxt={mp:'Mercado Pago',efectivo:'Efectivo',transferencia:'Transferencia'}[P];
+
+  if(!apiMode()){
+    var a=document.createElement('a');
+    a.href=waUrl(mensaje(0,pagoTxt));a.target='_blank';a.rel='noopener';document.body.appendChild(a);a.click();a.remove();
+    vaciar();$('#dPed').close();return;
+  }
+
+  var b=$('#enviar');b.disabled=true;b.textContent='Enviando…';
+  var payload={
+    items:ls.map(function(l){return {id:l.i.pid,qty:l.i.qty,extras:l.i.ex,nota:l.i.nota}}),
+    modo:modo(),zona:d?$('#cZona').value:'',dir:d?$('#cDir').value.trim():'',
+    cliente:{nombre:$('#cNom').value.trim(),tel:$('#cTel').value.trim()},
+    pago:P,cambio:$('#cCambio').value.trim(),nota:$('#cNota').value.trim()
+  };
+  var data=null;
+  try{
+    var r=await fetch(apiUrl('/api/checkout'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(payload)});
+    data=await r.json().catch(function(){return null});
+    if(!r.ok||!data||!data.ok){
+      $('#err').textContent=(data&&data.mensaje)||'No pudimos enviar el pedido. Probá de nuevo.';
+      if(r.status===409||(data&&/actualiz/i.test(data.mensaje||''))){await cargarConfig(true);pintarTienda()}
+      renderCart();return;
+    }
+  }catch(e){$('#err').textContent='No pudimos conectar. Revisá tu internet y probá de nuevo.';renderCart();return}
+
+  var txt=mensaje(data.numero,P==='mp'?'Mercado Pago (pagado)':pagoTxt);
+  store.set('last',JSON.stringify({id:data.id,numero:data.numero,text:txt}));
+  if(P==='mp'&&data.init_point){location.href=data.init_point;return}
+  vaciar();$('#dPed').close();
+  var extra=P==='transferencia'?(S.cfg.alias?' Transferí al alias '+S.cfg.alias+' y mandanos el comprobante por WhatsApp.':' Te pasamos el alias por WhatsApp para transferir.'):'';
+  showOk('¡Pedido #'+data.numero+' recibido!','El local ya lo tiene y te confirma el tiempo de espera.'+extra,[
+    {txt:'Avisar al local por WhatsApp',href:waUrl(txt)},
+    {txt:'Volver al menú',ghost:true,fn:cerrarOk}
+  ]);
+});
+
+/* ---------- Vuelta desde Mercado Pago ---------- */
+async function seguimiento(id,payId){
+  showOk('Confirmando tu pago…','Esto tarda unos segundos.',[]);
+  var o=null,gone=false;
+  for(var n=0;n<10;n++){
+    try{
+      var r=await fetch(apiUrl('/api/order?id='+encodeURIComponent(id)+(payId?'&payment_id='+encodeURIComponent(payId):'')));
+      if(r.ok){o=await r.json();if(o.estado!=='pendiente_pago'||o.pago.estado==='rechazado')break}
+      else if(r.status===404){gone=true;break}
+    }catch(e){}
+    await sleep(3000);
+  }
+  var volver={txt:'Volver al menú',ghost:true,fn:cerrarOk};
+  if(gone)return showOk('No encontramos ese pedido','Si pagaste, escribinos por WhatsApp con tu comprobante.',[{txt:'Escribir por WhatsApp',href:waUrl('Hola! Quiero consultar por un pedido que pagué con Mercado Pago.')},volver]);
+  if(o&&o.estado!=='pendiente_pago'){
+    vaciar();store.del('last');
+    var saved=null;try{saved=JSON.parse(sessionStorage.getItem('lastKeep')||'null')}catch(e){}
+    var botones=[];
+    if(saved&&saved.id===o.id)botones.push({txt:'Avisar al local por WhatsApp',href:waUrl(saved.text)});
+    botones.push(volver);
+    return showOk('¡Pago recibido! Pedido #'+o.numero,'El local ya tiene tu pedido y te confirma el tiempo de espera.',botones);
+  }
+  if(o&&o.pago.estado==='rechazado')return showOk('El pago no se completó','Tu pedido sigue armado. Podés intentar de nuevo o elegir otra forma de pago.',[volver]);
+  showOk('Todavía no vemos el pago','Si ya pagaste, puede tardar un poco en acreditarse. El local lo recibe apenas se confirme.',[
+    {txt:'Consultar de nuevo',fn:function(){seguimiento(id,payId)}},volver
+  ]);
+}
+
+/* ---------- Panel de administración ---------- */
+var A={tok:'',draft:null,cuenta:null,dirty:false,orders:[],seen:null,fresh:{},tab:'pedidos',ctx:null,timer:null,open:{},mpServidor:false,storage:true};
+var uid=function(p){return p+Math.random().toString(36).slice(2,8)};
+function aFetch(path,opt){
+  opt=opt||{};opt.headers=Object.assign({authorization:'Bearer '+A.tok},opt.headers||{});
+  return fetch(apiUrl(path),opt).then(function(r){if(r.status===401&&A.tok&&!A.loggingIn)aExpire();return r});
+}
+function aExpire(){A.tok='';store.del('tok');clearInterval(A.timer);alert_login()}
+function alert_login(){$('#aApp').hidden=true;$('#aSave').hidden=true;$('#aSalir').hidden=true;$('#aLogin').hidden=false;aErr('Tu sesión venció. Entrá de nuevo.')}
+function aErr(m){$('#aErr').textContent=m||''}
+function aMsg(m){$('#aMsg').textContent=m||''}
+function markDirty(){A.dirty=true;$('#aGuardar').disabled=false;aMsg('Hay cambios sin guardar.')}
+window.addEventListener('beforeunload',function(e){if(A.dirty){e.preventDefault();e.returnValue=''}});
+/* El navegador solo deja sonar la alerta después de un toque en la página. */
+document.addEventListener('click',function(){
+  if(!isAdminRoute)return;
+  try{A.ctx=A.ctx||new (window.AudioContext||window.webkitAudioContext)();if(A.ctx.state==='suspended')A.ctx.resume()}catch(e){}
+});
+
+async function aLogin(){
+  var email=$('#aEmail').value.trim(),pw=$('#aPass').value;
+  if(!email||!pw){aErr('Escribí tu email y tu contraseña.');return}
+  try{A.ctx=A.ctx||new (window.AudioContext||window.webkitAudioContext)()}catch(e){}
+  aErr('');A.loggingIn=true;
+  var r,j;
+  try{r=await fetch(apiUrl('/api/login'),{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify({email:email,password:pw})});j=await r.json().catch(function(){return null})}
+  catch(e){A.loggingIn=false;aErr('No pudimos conectar con el servidor.');return}
+  A.loggingIn=false;
+  if(!r.ok||!j||!j.token){aErr((j&&j.mensaje)||'No pudimos entrar. Revisá los datos.');return}
+  A.tok=j.token;store.set('tok',j.token);$('#aPass').value='';
+  await aEnter();
+}
+async function aEnter(){
+  var r,j;
+  A.loggingIn=true;
+  try{r=await aFetch('/api/orders');j=await r.json().catch(function(){return null})}catch(e){A.loggingIn=false;aErr('No pudimos conectar con el servidor.');return}
+  A.loggingIn=false;
+  if(r.status===401){A.tok='';store.del('tok');return}
+  if(!r.ok||!j||!Array.isArray(j.orders)){aErr((j&&j.mensaje)||'El panel solo funciona con el sitio publicado en Vercel, porque necesita el servidor.');return}
+  A.orders=j.orders;A.estado=j.estado;A.venceEl=j.venceEl;A.mpOn=!!j.mp;
+  A.seen=new Set(j.orders.map(function(o){return o.id}));
+  await cargarConfig(true);
+  A.storage=!!S.storage;
+  A.draft=clone(S.cfg);A.dirty=false;
+  $('#aLogin').hidden=true;$('#aApp').hidden=false;$('#aSalir').hidden=false;$('#aTitulo').textContent='Panel · '+S.cfg.nombre;
+  aErr('');
+  aShow('pedidos');
+  clearInterval(A.timer);A.timer=setInterval(aPoll,20000);
+}
+$('#aEntrar').addEventListener('click',aLogin);
+$('#aPass').addEventListener('keydown',function(e){if(e.key==='Enter')aLogin()});
+$('#aSalir').addEventListener('click',function(){store.del('tok');location.reload()});
+
+function aShow(tab){
+  A.tab=tab;
+  ['pedidos','menu','extras','local','cuenta'].forEach(function(t){$('#t-'+t).hidden=t!==tab});
+  $$('#aTabs button').forEach(function(b){b.setAttribute('aria-selected',b.getAttribute('data-tab')===tab)});
+  $('#aSave').hidden=tab==='pedidos'||tab==='cuenta';
+  if(tab==='pedidos')renderOrders();else if(tab==='cuenta')renderCuenta();else renderForm();
+}
+$('#aTabs').addEventListener('click',function(e){var b=e.target.closest('button[data-tab]');if(b)aShow(b.getAttribute('data-tab'))});
+
+/* Pedidos */
+function hora(iso){
+  var d=new Date(iso),o={timeZone:TZ};
+  var t=d.toLocaleTimeString('es-AR',{hour:'2-digit',minute:'2-digit',timeZone:TZ});
+  var hoy=new Date().toLocaleDateString('es-AR',o)===d.toLocaleDateString('es-AR',o);
+  return hoy?t:d.toLocaleDateString('es-AR',{day:'numeric',month:'numeric',timeZone:TZ})+' '+t;
+}
+var ESTADO_TXT={pendiente_pago:'Esperando pago',nuevo:'Nuevo',preparando:'Preparando',listo:'Listo',entregado:'Entregado',cancelado:'Cancelado'};
+var SIGUIENTE={nuevo:[['preparando','Preparando']],preparando:[['listo','Listo']],listo:[['entregado','Entregado']]};
+function pagoBadge(o){
+  var m=o.pago.metodo,e=o.pago.estado;
+  if(m==='mp')return e==='aprobado'?['Pagado con Mercado Pago','ok']:e==='rechazado'?['Pago rechazado','bad']:e==='devuelto'?['Pago devuelto','bad']:e==='contracargo'?['Contracargo','bad']:['Esperando pago de Mercado Pago','warn'];
+  if(m==='efectivo')return ['Efectivo'+(o.pago.cambio?' (abona con $'+o.pago.cambio+')':''),''];
+  return ['Transferencia',''];
+}
+function orderHtml(o,isNew){
+  var pb=pagoBadge(o),acts='',sig=SIGUIENTE[o.estado]||[];
+  sig.forEach(function(s){acts+='<button class="btn" data-o="'+esc(o.id)+'" data-e="'+s[0]+'">'+s[1]+'</button>'});
+  if(o.estado!=='entregado'&&o.estado!=='cancelado')acts+='<button class="btn ghost" data-o="'+esc(o.id)+'" data-e="cancelado">Cancelar</button>';
+  var items=o.items.map(function(i){
+    var det=[];if(i.extras.length)det.push('Extras: '+i.extras.join(', '));if(i.nota)det.push('Nota: '+i.nota);
+    return '<li><b>'+i.qty+'× '+esc(i.nom)+'</b>'+(det.length?' · '+esc(det.join(' · ')):'')+'</li>';
+  }).join('');
+  var ent=o.entrega.modo==='delivery'?'Delivery a '+esc(o.entrega.dir)+' ('+esc(o.entrega.zona)+')':'Retiro en el local';
+  var tel=String(o.cliente.tel).replace(/[^\d+]/g,'');
+  return '<article class="oc'+(isNew?' new':'')+(o.estado==='pendiente_pago'?' mute':'')+'">'+
+  '<div class="oh"><b>#'+o.numero+'</b><span class="badge'+(o.estado==='nuevo'?' warn':'')+'">'+ESTADO_TXT[o.estado]+'</span><span class="badge '+pb[1]+'">'+esc(pb[0])+'</span><small>'+esc(hora(o.creado))+'</small></div>'+
+  '<p><b>'+esc(o.cliente.nombre)+'</b> · <a href="tel:'+esc(tel)+'">'+esc(o.cliente.tel)+'</a></p><p>'+ent+'</p><ul>'+items+'</ul>'+
+  (o.nota?'<p>Nota del cliente: '+esc(o.nota)+'</p>':'')+
+  '<p><b>Total '+money(o.total)+'</b>'+(o.envio?' (envío '+money(o.envio)+')':'')+'</p>'+
+  (acts?'<div class="acts">'+acts+'</div>':'')+'</article>';
+}
+function renderOrders(){
+  var act=A.orders.filter(function(o){return o.estado!=='entregado'&&o.estado!=='cancelado'});
+  var old=A.orders.filter(function(o){return o.estado==='entregado'||o.estado==='cancelado'});
+  var h='';
+  if(A.estado==='vencido')h+='<div class="banner">Tu mensualidad está vencida y el local no recibe pedidos nuevos. Escribinos para regularizarla.</div>';
+  if(A.estado==='suspendido')h+='<div class="banner">Tu local está suspendido y no recibe pedidos nuevos. Escribinos para reactivarlo.</div>';
+  if(!A.storage)h+='<div class="banner">Falta conectar la base de datos (Upstash Redis) en Vercel. Sin eso no se pueden guardar pedidos ni cambios.</div>';
+  h+='<h4>En curso ('+act.length+')</h4>';
+  h+=act.length?act.map(function(o){return orderHtml(o,A.fresh[o.id])}).join(''):'<p class="note">No hay pedidos en curso. Esta pantalla se actualiza sola y suena cuando entra uno nuevo.</p>';
+  if(old.length)h+='<details style="margin-top:18px"><summary><b>Terminados ('+old.length+')</b></summary>'+old.map(function(o){return orderHtml(o,false)}).join('')+'</details>';
+  $('#t-pedidos').innerHTML=h;
+}
+$('#t-pedidos').addEventListener('click',async function(e){
+  var b=e.target.closest('button[data-o]');if(!b)return;
+  b.disabled=true;
+  try{
+    var r=await aFetch('/api/orders',{method:'PATCH',headers:{'content-type':'application/json'},body:JSON.stringify({id:b.getAttribute('data-o'),estado:b.getAttribute('data-e')})});
+    var j=await r.json();
+    if(r.ok){A.orders=A.orders.map(function(o){return o.id===j.order.id?j.order:o})}
+  }catch(err){}
+  renderOrders();
+});
+function beep(){
+  try{
+    var c=A.ctx;if(!c)return;if(c.state==='suspended')c.resume();
+    var o=c.createOscillator(),g=c.createGain();o.connect(g);g.connect(c.destination);
+    o.frequency.value=880;g.gain.value=.15;o.start();o.stop(c.currentTime+.3);
+  }catch(e){}
+}
+async function aPoll(){
+  if(document.visibilityState!=='visible')return;
+  try{
+    var r=await aFetch('/api/orders');if(!r.ok)return;
+    var j=await r.json();A.orders=j.orders;A.fresh={};
+    var nuevo=false;
+    j.orders.forEach(function(o){if(!A.seen.has(o.id)){A.seen.add(o.id);if(o.estado==='nuevo'){A.fresh[o.id]=1;nuevo=true}}});
+    if(nuevo)beep();
+    if(A.tab==='pedidos')renderOrders();
+  }catch(e){}
+}
+
+/* Formularios del menú, extras y local */
+function fld(label,path,val,kind,opt){
+  opt=opt||{};
+  return '<label class="f">'+label+'<input data-p="'+path+'" data-k="'+kind+'" type="text"'+(kind==='i'?' inputmode="numeric"':'')+(opt.max?' maxlength="'+opt.max+'"':'')+(opt.ph?' placeholder="'+esc(opt.ph)+'"':'')+' value="'+esc(val)+'"></label>';
+}
+function itemHtml(p,pi){
+  var d=A.draft;
+  var sel=d.categorias.map(function(c){return '<option value="'+esc(c.id)+'"'+(c.id===p.cat?' selected':'')+'>'+esc(c.nom)+'</option>'}).join('');
+  return '<details class="it" data-id="'+esc(p.id)+'"'+(A.open[p.id]?' open':'')+'><summary><span data-sum="'+pi+'">'+esc(p.nom)+' · '+money(p.precio)+(p.off?' · agotado':'')+'</span></summary><div class="ar">'+
+  fld('Nombre','menu.'+pi+'.nom',p.nom,'s',{max:60})+fld('Descripción','menu.'+pi+'.desc',p.desc,'s',{max:160})+fld('Precio ($)','menu.'+pi+'.precio',p.precio,'i')+
+  '<label class="f">Categoría<select data-p="menu.'+pi+'.cat" data-k="s" data-re="1">'+sel+'</select></label>'+
+  '<label class="chk"><input type="checkbox" data-p="menu.'+pi+'.extras" data-k="b"'+(p.extras?' checked':'')+'> Se puede pedir con extras</label>'+
+  '<label class="chk"><input type="checkbox" data-p="menu.'+pi+'.off" data-k="b"'+(p.off?' checked':'')+'> Agotado por hoy</label>'+
+  '<div class="mini"><button class="btn ghost" data-a="pup" data-i="'+pi+'" aria-label="Subir">▲</button><button class="btn ghost" data-a="pdn" data-i="'+pi+'" aria-label="Bajar">▼</button><button class="btn ghost" data-a="delp" data-i="'+pi+'">Borrar</button></div>'+
+  '</div></details>';
+}
+function renderForm(){
+  var d=A.draft,h='';
+  d.categorias.forEach(function(c,ci){
+    h+='<div class="cat"><div class="ad2"><input data-p="categorias.'+ci+'.nom" data-k="s" maxlength="40" aria-label="Nombre de la categoría" value="'+esc(c.nom)+'"><span class="mini"><button class="btn ghost" data-a="cup" data-i="'+ci+'" aria-label="Subir categoría">▲</button><button class="btn ghost" data-a="cdn" data-i="'+ci+'" aria-label="Bajar categoría">▼</button></span></div>';
+    d.menu.forEach(function(p,pi){if(p.cat===c.id)h+=itemHtml(p,pi)});
+    h+='<div class="acts"><button class="btn ghost" data-a="addp" data-c="'+esc(c.id)+'">+ Agregar producto</button><button class="btn ghost" data-a="delc" data-i="'+ci+'">Borrar categoría</button></div></div>';
+  });
+  h+='<div class="acts" style="margin-top:22px"><button class="btn ghost" data-a="addc">+ Agregar categoría</button></div>';
+  $('#t-menu').innerHTML=h;
+
+  var e='<h4>Extras para las hamburguesas</h4><p class="note">Se ofrecen en los productos que tengan marcado “Se puede pedir con extras”.</p>';
+  d.extras.forEach(function(x,i){
+    e+='<div class="ad"><input data-p="extras.'+i+'.nom" data-k="s" maxlength="40" aria-label="Nombre del extra" value="'+esc(x.nom)+'"><input data-p="extras.'+i+'.precio" data-k="i" inputmode="numeric" aria-label="Precio del extra" value="'+esc(x.precio)+'"><button class="btn ghost" data-a="dele" data-i="'+i+'" aria-label="Borrar extra">✕</button></div>';
+  });
+  e+='<div class="acts"><button class="btn ghost" data-a="adde">+ Agregar extra</button></div>';
+  $('#t-extras').innerHTML=e;
+
+  var hr=d.horario,hrOpt=function(from,to,sel){var o='';for(var n=from;n<=to;n++)o+='<option value="'+n+'"'+(n===sel?' selected':'')+'>'+pad(n)+'</option>';return o};
+  var order=[1,2,3,4,5,6,0];
+  var l='<h4>Datos del local</h4>'+fld('Nombre del local','nombre',d.nombre,'s',{max:40})+fld('Frase de bienvenida','descripcion',d.descripcion,'s',{max:140})+
+  fld('WhatsApp del local (con código de país, sin espacios)','whatsapp',d.whatsapp,'s',{max:20,ph:'5491155550000'})+
+  fld('Alias para transferencias (opcional)','alias',d.alias,'s',{max:60});
+  l+='<h4>Pedidos</h4><label class="chk"><input type="checkbox" data-p="pausado" data-k="b"'+(d.pausado?' checked':'')+'> Pausar pedidos ahora (el local figura cerrado)</label>';
+  l+='<label class="chk" style="margin-top:10px"><input type="checkbox" data-p="aceptaMP" data-k="b"'+(d.aceptaMP?' checked':'')+'> Cobrar con Mercado Pago</label>';
+  l+='<p class="note">'+(A.mpOn?'Tu cuenta de Mercado Pago está conectada.':'Todavía no conectaste tu Mercado Pago: hacelo en la pestaña Cuenta.')+'</p>';
+  l+='<h4>Horario de atención</h4><div class="days">'+order.map(function(n){return '<label class="chk"><input type="checkbox" data-day="'+n+'"'+(hr.dias.indexOf(n)>-1?' checked':'')+'> '+DIAS[n]+'</label>'}).join('')+'</div>';
+  l+='<div class="hrs"><label class="f">Abre<select data-p="horario.desde" data-k="i">'+hrOpt(0,23,hr.desde)+'</select></label><label class="f">Cierra<select data-p="horario.hasta" data-k="i">'+hrOpt(1,24,hr.hasta)+'</select></label></div>';
+  l+='<p class="note">La hora es la de Argentina. Si cerrás después de medianoche, poné una hora de cierre menor a la de apertura (por ejemplo abre 20:00 y cierra 02:00).</p>';
+  l+='<h4>Envío por barrio</h4>';
+  d.zonas.forEach(function(z,i){
+    l+='<div class="ad"><input data-p="zonas.'+i+'.nom" data-k="s" maxlength="40" aria-label="Barrio" value="'+esc(z.nom)+'"><input data-p="zonas.'+i+'.costo" data-k="i" inputmode="numeric" aria-label="Costo de envío" value="'+esc(z.costo)+'"><button class="btn ghost" data-a="delz" data-i="'+i+'" aria-label="Borrar barrio">✕</button></div>';
+  });
+  l+='<div class="acts"><button class="btn ghost" data-a="addz">+ Agregar barrio</button></div>';
+  $('#t-local').innerHTML=l;
+}
+function setPath(o,path,v){var k=path.split('.');for(var i=0;i<k.length-1;i++)o=o[k[i]];o[k[k.length-1]]=v}
+function onEdit(e){
+  var el=e.target;
+  if(el.hasAttribute('data-day')){
+    var n=+el.getAttribute('data-day'),ds=A.draft.horario.dias,ix=ds.indexOf(n);
+    if(el.checked&&ix<0)ds.push(n);if(!el.checked&&ix>-1)ds.splice(ix,1);
+    markDirty();return;
+  }
+  var p=el.getAttribute('data-p');if(!p)return;
+  var k=el.getAttribute('data-k');
+  var v=k==='b'?el.checked:k==='i'?(parseInt(String(el.value).replace(/\D/g,''),10)||0):el.value;
+  setPath(A.draft,p,v);markDirty();
+  var m=p.match(/^menu\.(\d+)\./);
+  if(m){var it=A.draft.menu[+m[1]],s=$('[data-sum="'+m[1]+'"]');if(s)s.textContent=it.nom+' · '+money(it.precio)+(it.off?' · agotado':'')}
+  if(el.hasAttribute('data-re'))renderForm();
+}
+['input','change'].forEach(function(ev){$('#aApp').addEventListener(ev,function(e){if(A.tab!=='pedidos')onEdit(e)})});
+$('#aApp').addEventListener('toggle',function(e){var t=e.target;if(t.classList&&t.classList.contains('it'))A.open[t.getAttribute('data-id')]=t.open?1:0},true);
+
+function swap(arr,i,j){if(j<0||j>=arr.length)return false;var t=arr[i];arr[i]=arr[j];arr[j]=t;return true}
+$('#aApp').addEventListener('click',function(e){
+  var b=e.target.closest('[data-a]');if(!b)return;
+  var a=b.getAttribute('data-a'),i=+b.getAttribute('data-i'),d=A.draft;
+  var sure=function(){if(b.getAttribute('data-sure')!=='1'){b.setAttribute('data-sure','1');b.textContent='Tocá de nuevo para borrar';return false}return true};
+  aMsg('');
+  switch(a){
+    case 'addc':d.categorias.push({id:uid('c'),nom:'Nueva categoría'});break;
+    case 'delc':
+      if(d.menu.some(function(p){return p.cat===d.categorias[i].id})){aMsg('Primero movés o borrás los productos de esa categoría.');return}
+      if(d.categorias.length<2){aMsg('Tiene que quedar al menos una categoría.');return}
+      if(!sure())return;d.categorias.splice(i,1);break;
+    case 'cup':swap(d.categorias,i,i-1);break;
+    case 'cdn':swap(d.categorias,i,i+1);break;
+    case 'addp':var np={id:uid('p'),cat:b.getAttribute('data-c'),nom:'Nuevo producto',desc:'',precio:0,extras:false,off:false};d.menu.push(np);A.open[np.id]=1;break;
+    case 'delp':if(!sure())return;d.menu.splice(i,1);break;
+    case 'pup':case 'pdn':
+      var dir=a==='pup'?-1:1,j=i+dir;
+      while(j>=0&&j<d.menu.length&&d.menu[j].cat!==d.menu[i].cat)j+=dir;
+      swap(d.menu,i,j);break;
+    case 'adde':d.extras.push({id:uid('e'),nom:'Nuevo extra',precio:0});break;
+    case 'dele':if(!sure())return;d.extras.splice(i,1);break;
+    case 'addz':d.zonas.push({id:uid('z'),nom:'Nuevo barrio',costo:0});break;
+    case 'delz':if(!sure())return;d.zonas.splice(i,1);break;
+  }
+  markDirty();renderForm();
+});
+
+$('#aGuardar').addEventListener('click',async function(){
+  var b=this;b.disabled=true;aMsg('Guardando…');
+  try{
+    var r=await aFetch('/api/menu',{method:'PUT',headers:{'content-type':'application/json'},body:JSON.stringify(A.draft)});
+    var j=await r.json().catch(function(){return null});
+    if(!r.ok){aMsg((j&&j.mensaje)||'No se pudo guardar. Probá de nuevo.');b.disabled=false;return}
+    S.cfg=j.config;A.draft=clone(j.config);A.dirty=false;
+    $('#aTitulo').textContent='Panel · '+j.config.nombre;
+    aMsg('Guardado. Los clientes ya ven los cambios.');renderForm();
+  }catch(e){aMsg('No pudimos conectar. Probá de nuevo.');b.disabled=false}
+});
+
+/* Cuenta: plan, contraseña y Mercado Pago */
+function fechaTxt(iso){if(!iso)return 'sin fecha';var p=iso.split('-');return p[2]+'/'+p[1]+'/'+p[0]}
+async function renderCuenta(){
+  var el=$('#t-cuenta');
+  if(!A.cuenta){
+    el.innerHTML='<p class="note">Cargando…</p>';
+    try{var r=await aFetch('/api/account');A.cuenta=await r.json()}catch(e){el.innerHTML='<p class="note">No pudimos cargar tu cuenta.</p>';return}
+  }
+  var c=A.cuenta,E={activo:'Al día',vencido:'Vencida',suspendido:'Suspendido'};
+  var h='<h4>Tu plan</h4><p><span class="badge'+(c.estado==='activo'?' ok':' bad')+'">'+esc(E[c.estado]||c.estado)+'</span> '+(c.venceEl?'Vence el '+esc(fechaTxt(c.venceEl)):'')+'</p><p class="note">Usuario: '+esc(c.email)+'</p>';
+  h+='<h4>Mercado Pago</h4>';
+  if(c.mp&&c.mp.conectado){
+    h+='<p>Conectado (credencial terminada en <b>'+esc(c.mp.last4)+'</b>). Los pagos van directo a tu cuenta.</p><div class="acts"><button class="btn ghost" id="mpQuitar">Desconectar</button></div>';
+  }else{
+    h+='<p class="note">Pegá el <b>Access Token</b> de tu cuenta de Mercado Pago (Tu negocio → Configuración → Credenciales, de producción). Así los pagos de tus clientes entran a tu cuenta.</p>'+
+    '<label class="f" for="mpTok">Access Token<input id="mpTok" type="password" autocomplete="off" placeholder="APP_USR-…"></label><div class="acts"><button class="btn" id="mpGuardar">Conectar</button></div>';
+  }
+  h+='<h4>Cambiar contraseña</h4><label class="f" for="pwA">Contraseña actual<input id="pwA" type="password" autocomplete="current-password"></label>'+
+  '<label class="f" for="pwN">Contraseña nueva (mínimo 8 caracteres)<input id="pwN" type="password" autocomplete="new-password"></label><div class="acts"><button class="btn" id="pwGuardar">Cambiar contraseña</button></div>'+
+  '<p class="note" id="cuMsg" role="status"></p>';
+  el.innerHTML=h;
+}
+$('#t-cuenta').addEventListener('click',async function(e){
+  var id=e.target.id,msg=function(m){var x=$('#cuMsg');if(!x){renderCuenta().then(function(){$('#cuMsg').textContent=m})}else x.textContent=m};
+  var post=async function(body){
+    var r=await aFetch('/api/account',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(body)});
+    return {r:r,j:await r.json().catch(function(){return null})};
+  };
+  try{
+    if(id==='mpGuardar'){
+      e.target.disabled=true;msg('Comprobando…');
+      var x=await post({accion:'mp',token:$('#mpTok').value.trim()});
+      if(!x.r.ok){e.target.disabled=false;msg((x.j&&x.j.mensaje)||'No pudimos conectar.');return}
+      A.cuenta=null;A.mpOn=true;await renderCuenta();$('#cuMsg').textContent='Mercado Pago conectado.';
+    }else if(id==='mpQuitar'){
+      if(e.target.getAttribute('data-sure')!=='1'){e.target.setAttribute('data-sure','1');e.target.textContent='Tocá de nuevo para desconectar';return}
+      var y=await post({accion:'mp_quitar'});
+      if(y.r.ok){A.cuenta=null;A.mpOn=false;await renderCuenta();$('#cuMsg').textContent='Mercado Pago desconectado.'}
+    }else if(id==='pwGuardar'){
+      var z=await post({accion:'clave',actual:$('#pwA').value,nueva:$('#pwN').value});
+      if(!z.r.ok){msg((z.j&&z.j.mensaje)||'No pudimos cambiarla.');return}
+      A.tok=z.j.token;store.set('tok',z.j.token);$('#pwA').value='';$('#pwN').value='';msg('Contraseña cambiada.');
+    }
+  }catch(err){msg('No pudimos conectar. Probá de nuevo.')}
+});
+
+/* ---------- Arranque ---------- */
+(async function init(){
+  if(isAdminRoute){
+    $('#tienda').hidden=true;$('#admin').hidden=false;document.title='Panel del local';
+    var t0=store.get('tok');if(t0){A.tok=t0;aEnter()}
+    return;
+  }
+  var st=await cargarConfig(false);
+  if(st==='nolocal'){
+    document.title='Local no encontrado';
+    $('#nombre').textContent='No encontramos este local';$('#desc').textContent='Revisá la dirección o escribile al local.';$('#estado').hidden=true;
+    return;
+  }
+  if(st==='error'){
+    $('#nombre').textContent='Ups';$('#menu').innerHTML='<div class="banner">No pudimos cargar el menú. <button class="btn" id="reint">Reintentar</button></div>';
+    $('#reint').onclick=function(){location.reload()};return;
+  }
+  S.cart=loadCart();
+  if(mpMode())$('input[name=pago][value=mp]').checked=true;
+  pintarTienda();
+  setInterval(refrescar,60000);
+  document.addEventListener('visibilitychange',refrescar);
+  var q=new URLSearchParams(location.search),ped=q.get('pedido');
+  if(ped&&apiMode()){
+    try{var l=store.get('last');if(l)sessionStorage.setItem('lastKeep',l)}catch(e){}
+    try{history.replaceState(null,'',location.pathname+(LOCAL?'?local='+encodeURIComponent(LOCAL):''))}catch(e){}
+    seguimiento(ped,q.get('payment_id')||q.get('collection_id'));
+  }
+})();
+</script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "name": "pedidos-multilocal",
+  "version": "2.0.0",
+  "private": true,
+  "description": "Plataforma de pedidos online con Mercado Pago para varios locales, cada uno con su subdominio, su panel y su usuario.",
+  "scripts": {
+    "test": "node --test"
+  },
+  "engines": { "node": ">=18" }
+}
