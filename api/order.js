@@ -10,7 +10,8 @@ module.exports = async (req, res) => {
     const o = await getOrder(tenant.slug, (req.query || {}).id);
     if (!o) throw new Reject('No encontramos ese pedido.', 404, 'pedido_no_encontrado');
     send(res, 200, {
-      id: o.id, numero: o.numero, estado: o.estado, modo: o.entrega.modo,
+      id: o.id, numero: o.numero, estado: o.estado, modo: o.entrega.modo, hora: o.entrega.hora || '',
+      motivo: o.estado === 'cancelado' ? o.motivo || '' : '',
       pago: { metodo: o.pago.metodo, pagado: Boolean(o.pago.pagado) }, total: o.total
     }, 'no-store');
   } catch (e) {

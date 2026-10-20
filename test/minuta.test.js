@@ -1,4 +1,4 @@
-// Pruebas de las funciones nuevas de Minuta (fotos, take away, mínimo, pagos, trámites).
+// Pruebas de las funciones nuevas de Minuta (fotos, retiro con hora, mínimo, pagos, trámites).
 const test = require('node:test');
 const assert = require('node:assert');
 const fs = require('fs');
@@ -153,33 +153,78 @@ test('el local elige tipografía, dirección, etiquetas, aviso y formas de entre
   assert.deepStrictEqual(c.demora, { retiro: 20, delivery: 40 });
   assert.strictEqual((await put(abierto({ fuente: 'comic-sans' }))).status, 200); // fuente desconocida: vuelve a la de bodegón
   assert.strictEqual((await call('menu', { host: a.h })).body.config.fuente, 'bodegon');
-  assert.strictEqual((await put(abierto({ modos: { retiro: false, takeaway: false, delivery: false } }))).status, 400);
+  assert.strictEqual((await put(abierto({ modos: { retiro: false, delivery: false } }))).status, 400);
   assert.strictEqual((await put(abierto({ demora: { retiro: 999 } }))).status, 400);
 });
 
-test('take away con hora, formas de entrega apagadas y pedido mínimo', async () => {
-  const a = await nuevoLocal('takeaway');
+test('retiro con hora (take away unificado), formas de entrega apagadas y pedido mínimo', async () => {
+  const a = await nuevoLocal('retirohora');
   const co = (b) => call('checkout', { method: 'POST', host: a.h, body: pedido(Object.assign({ pago: 'efectivo' }, b)) });
-  const r = await co({ modo: 'takeaway', hora: '21:30' });
+  const r = await co({ modo: 'retiro', hora: '21:30' });
   assert.strictEqual(r.status, 200, JSON.stringify(r.body));
-  const o = JSON.parse(db.get('t:takeaway:order:' + r.body.id));
-  assert.deepStrictEqual(o.entrega, { modo: 'takeaway', zona: '', dir: '', hora: '21:30' });
+  const o = JSON.parse(db.get('t:retirohora:order:' + r.body.id));
+  assert.deepStrictEqual(o.entrega, { modo: 'retiro', zona: '', dir: '', hora: '21:30' });
   assert.strictEqual(o.envio, 0);
-  assert.strictEqual((await co({ modo: 'takeaway', hora: '' })).status, 200); // lo antes posible
-  assert.strictEqual((await co({ modo: 'takeaway', hora: '25:00' })).status, 400);
-  assert.strictEqual((await call('order', { host: a.h, query: { id: r.body.id } })).body.modo, 'takeaway');
+  assert.strictEqual(o.historial[0].e, 'nuevo');
+  assert.strictEqual((await co({ modo: 'retiro', hora: '' })).status, 200); // lo antes posible
+  assert.strictEqual((await co({ modo: 'retiro', hora: '25:00' })).status, 400);
+  // Una tienda vieja que todavía manda "takeaway" queda como retiro con hora.
+  const viejo = await co({ modo: 'takeaway', hora: '22:00' });
+  assert.strictEqual(viejo.status, 200);
+  assert.strictEqual(JSON.parse(db.get('t:retirohora:order:' + viejo.body.id)).entrega.modo, 'retiro');
+  const pub = (await call('order', { host: a.h, query: { id: r.body.id } })).body;
+  assert.strictEqual(pub.modo, 'retiro');
+  assert.strictEqual(pub.hora, '21:30');
   // "en camino" sigue siendo solo para delivery
   assert.strictEqual((await call('orders', { method: 'PATCH', host: a.h, headers: bearer(a.token), body: { id: r.body.id, estado: 'en_camino' } })).status, 400);
 
-  await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ modos: { retiro: true, takeaway: false, delivery: false } }) });
-  assert.strictEqual((await co({ modo: 'takeaway' })).status, 400);
+  // Si el local no deja elegir hora, la hora se ignora.
+  await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ elegirHora: false }) });
+  const sinHora = await co({ modo: 'retiro', hora: '21:30' });
+  assert.strictEqual(JSON.parse(db.get('t:retirohora:order:' + sinHora.body.id)).entrega.hora, '');
+
+  await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ modos: { retiro: true, delivery: false } }) });
   assert.strictEqual((await co({ modo: 'delivery' })).status, 400);
   assert.strictEqual((await co({ modo: 'retiro' })).status, 200);
+  assert.deepStrictEqual((await call('menu', { host: a.h })).body.config.modos, { retiro: true, delivery: false });
 
   await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ minimo: 50000 }) });
   const chico = await co({ modo: 'retiro', items: [{ id: 'agu', qty: 1 }] });
   assert.strictEqual(chico.status, 400);
   assert.match(chico.body.mensaje, /mínimo/);
+});
+
+test('panel: historial de estados, rechazo con motivo y nota interna', async () => {
+  const a = await nuevoLocal('historial');
+  const r = await call('checkout', { method: 'POST', host: a.h, body: pedido({ pago: 'efectivo', modo: 'retiro' }) });
+  const patch = (b) => call('orders', { method: 'PATCH', host: a.h, headers: bearer(a.token), body: Object.assign({ id: r.body.id }, b) });
+  assert.strictEqual((await patch({ estado: 'preparando' })).status, 200);
+  await patch({ estado: 'preparando' }); // repetir el mismo estado no suma historial
+  const o1 = (await patch({ notaLocal: '  lo retira   el hermano ' })).body.order;
+  assert.deepStrictEqual(o1.historial.map((h) => h.e), ['nuevo', 'preparando']);
+  assert.strictEqual(o1.notaLocal, 'lo retira el hermano');
+  const o2 = (await patch({ estado: 'cancelado', motivo: 'Nos quedamos sin milanesas' })).body.order;
+  assert.strictEqual(o2.motivo, 'Nos quedamos sin milanesas');
+  const pub = (await call('order', { host: a.h, query: { id: r.body.id } })).body;
+  assert.strictEqual(pub.motivo, 'Nos quedamos sin milanesas');
+  assert.strictEqual(pub.notaLocal, undefined); // la nota interna no sale al cliente
+  // Si lo vuelven a aceptar, el motivo se borra.
+  const o3 = (await patch({ estado: 'preparando' })).body.order;
+  assert.strictEqual(o3.motivo, undefined);
+  assert.deepStrictEqual(o3.historial.map((h) => h.e), ['nuevo', 'preparando', 'cancelado', 'preparando']);
+});
+
+test('pedidos viejos con take away se leen como retiro', async () => {
+  const a = await nuevoLocal('legado');
+  const r = await call('checkout', { method: 'POST', host: a.h, body: pedido({ pago: 'efectivo', modo: 'retiro', hora: '' }) });
+  const k = 't:legado:order:' + r.body.id;
+  const o = JSON.parse(db.get(k));
+  o.entrega.modo = 'takeaway'; o.entrega.hora = '20:15'; delete o.historial;
+  db.set(k, JSON.stringify(o));
+  const list = (await call('orders', { host: a.h, headers: bearer(a.token) })).body.orders;
+  assert.strictEqual(list[0].entrega.modo, 'retiro');
+  assert.strictEqual(list[0].entrega.hora, '20:15');
+  assert.strictEqual(list[0].historial[0].e, 'nuevo');
 });
 
 test('un local guardado antes de Minuta sigue funcionando con los campos nuevos', async () => {
@@ -189,10 +234,22 @@ test('un local guardado antes de Minuta sigue funcionando con los campos nuevos'
   viejo.menu.forEach((p) => { delete p.foto; delete p.tags; delete p.destacado; });
   db.set('t:viejo:cfg', JSON.stringify(viejo));
   const c = (await call('menu', { host: a.h })).body.config;
-  assert.deepStrictEqual(c.modos, { retiro: true, takeaway: true, delivery: true });
+  assert.deepStrictEqual(c.modos, { retiro: true, delivery: true });
+  assert.strictEqual(c.elegirHora, true);
   assert.deepStrictEqual(c.menu[0].tags, []);
   assert.strictEqual(c.menu[0].foto, '');
   assert.strictEqual((await call('checkout', { method: 'POST', host: a.h, body: pedido({ pago: 'efectivo', modo: 'takeaway' }) })).status, 200);
+  // Un local que solo tenía take away (retiro apagado) queda con retiro prendido y con hora.
+  const v2 = JSON.parse(db.get('t:viejo:cfg'));
+  v2.modos = { retiro: false, takeaway: true, delivery: false }; delete v2.elegirHora;
+  db.set('t:viejo:cfg', JSON.stringify(v2));
+  const c2 = (await call('menu', { host: a.h })).body.config;
+  assert.deepStrictEqual(c2.modos, { retiro: true, delivery: false });
+  assert.strictEqual(c2.elegirHora, true);
+  // Y uno que tenía take away apagado no ofrece elegir hora.
+  v2.modos = { retiro: true, takeaway: false, delivery: true };
+  db.set('t:viejo:cfg', JSON.stringify(v2));
+  assert.strictEqual((await call('menu', { host: a.h })).body.config.elegirHora, false);
 });
 
 test('superadmin: pagos con monto e historial, WhatsApp y cuota del local, pedidos contados', async () => {
