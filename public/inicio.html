@@ -25,7 +25,7 @@
 :root[data-theme="dark"]{--surface:#1B1715;--raised:#26201D;--mantel:#3A2F27;--ink:#F6EEE4;--mute:#B9AC9E;--line:#3D342E;--tinto:#E06A78;--ontinto:#1B1715;--sifon:#6CC3AE;--onsifon:#1B1715;--error:#FF9F6B;color-scheme:dark}
 *{box-sizing:border-box}
 [hidden]{display:none!important}
-html{scroll-behavior:smooth;background:var(--surface)}
+html{scroll-behavior:smooth;background:var(--surface);overflow-x:clip}
 body{margin:0;background:var(--surface);color:var(--ink);font:16px/1.6 var(--sans);overflow-x:hidden}
 img{max-width:100%;display:block}
 a{color:inherit}
@@ -73,6 +73,7 @@ h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.08;margin:0;text-
 .ticket .tot{border-top:1.5px dashed var(--line);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:600;font-size:16px}
 .ticket .by{margin-top:12px;font:600 12px var(--sans);color:var(--mute);display:flex;align-items:center;gap:6px}
 .ticket .by img{width:16px;height:16px}
+@media (max-width:720px){input,select,textarea{font-size:16px!important}.plate .mantel{inset:-12px -4px 28px 16px}section{padding:60px 0}.head{margin-bottom:30px}.hero .acts .btn{flex:1 1 100%}.carta .in{padding:30px 18px 24px}.carta .ln span{font-size:22px}form{padding:20px}.faq summary{font-size:20px}.nav .w{height:60px}}
 @media (max-width:860px){.hero{grid-template-columns:1fr;padding:40px 0 56px;gap:40px}.plate{max-width:440px;margin:0 auto;width:calc(100% - 24px)}.ticket{margin:0 auto}}
 /* Banda de mantel */
 .band{height:48px;background-color:#FBF6EE;background-image:linear-gradient(90deg,rgba(142,27,44,.45) 50%,transparent 0),linear-gradient(rgba(142,27,44,.45) 50%,transparent 0);background-size:32px 32px;border-block:1px solid var(--line)}

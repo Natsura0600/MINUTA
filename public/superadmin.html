@@ -46,14 +46,6 @@ button,input,select,textarea{font:inherit;color:inherit}
 .topbar{display:flex;align-items:center;justify-content:space-between;gap:12px;margin-bottom:18px;flex-wrap:wrap}
 .topbar h1{font:400 clamp(30px,4vw,40px)/1.05 var(--disp);margin:0}
 .topbar p{margin:2px 0 0;color:var(--mute)}
-@media (max-width:860px){
-  .app{grid-template-columns:1fr}
-  .side{position:sticky;top:0;height:auto;flex-direction:row;align-items:center;overflow-x:auto;padding:10px;gap:4px;z-index:20;border-right:0;border-bottom:4px solid var(--tinto);scrollbar-width:none}
-  .side::-webkit-scrollbar{display:none}
-  .side .logo{padding:0 8px 0 4px}.side .logo small,.side .sp,.side .foot{display:none}
-  .nav{width:auto;flex:none;padding:9px 12px}
-  .nav span.t{white-space:nowrap}
-}
 /* Piezas */
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:6px;background:var(--tinto);color:var(--ontinto);border:var(--bd);border-radius:10px;padding:10px 16px;font:700 14px/20px var(--sans);cursor:pointer;text-decoration:none;box-shadow:var(--sh-sm);white-space:nowrap}
 .btn.ghost{background:var(--raised);color:var(--ink)}
@@ -154,6 +146,41 @@ dialog.modal h3{margin:0 0 8px;font:400 26px/1.1 var(--disp)}
 .steps3 span{flex:1;height:6px;border-radius:9px;background:var(--line)}
 .steps3 span.on{background:var(--tinto)}
 .mini-help{background:var(--mantel);border:1.5px dashed var(--ink);border-radius:10px;padding:12px 14px;font-size:14px}
+.mtop{display:none}
+.ts{display:none}
+@media (max-width:860px){
+  .app{grid-template-columns:1fr}
+  input,select,textarea{font-size:16px!important}
+  .mtop{display:flex;position:sticky;top:0;z-index:20;align-items:center;justify-content:space-between;gap:10px;background:var(--carbon);color:var(--oncarbon);padding:10px 16px;border-bottom:4px solid var(--tinto);margin:0 calc(-1*clamp(16px,3vw,36px)) 16px}
+  .mtop img{height:24px}
+  .mtop button{display:inline-flex;align-items:center;gap:6px;background:transparent;border:2px solid var(--oncarbon);color:var(--oncarbon);border-radius:8px;padding:5px 10px;font-weight:700;font-size:13px;cursor:pointer}
+  .main{padding-top:0;padding-bottom:calc(96px + env(safe-area-inset-bottom,0px))}
+  .side{position:fixed;top:auto;bottom:0;left:0;right:0;height:auto;z-index:30;flex-direction:row;gap:2px;padding:4px 4px calc(4px + env(safe-area-inset-bottom,0px));border-right:0;border-top:4px solid var(--tinto)}
+  .side .logo,.side .sp,.side .foot,#salir{display:none}
+  .nav{flex:1 1 0;min-width:0;flex-direction:column;gap:2px;padding:7px 2px;font-size:11px;text-align:center;justify-content:center}
+  .nav .ico{width:22px;height:22px}
+  .nav .t{display:none}.nav .ts{display:block;white-space:nowrap}
+  .nav .n{position:absolute;top:2px;left:calc(50% + 6px);margin:0;min-width:18px;height:18px;line-height:18px;font-size:11px;padding:0 5px}
+  .topbar{margin-bottom:14px;flex-wrap:nowrap;align-items:flex-start}
+  #refresh{font-size:0;gap:0;padding:8px}#refresh .ico{width:20px;height:20px}
+  .topbar h1{font-size:30px}
+  .topbar p{font-size:14px}
+  .kpi b{font-size:22px;white-space:nowrap}
+  .kpi{padding:12px}
+  .todo .it .row{width:100%}
+  .todo .it .row .btn{flex:1}
+  .toast{left:16px;right:16px;bottom:calc(84px + env(safe-area-inset-bottom,0px));max-width:none}
+  dialog.drawer{width:100%;max-width:100%;border-left:0}
+  .dh h2{font-size:22px}
+  .db{padding:14px 14px calc(40px + env(safe-area-inset-bottom,0px))}
+  .hist td.n{white-space:nowrap}
+  .card{padding:14px}
+  .acts .btn{flex:1 1 auto}
+  dialog.modal{margin:auto 0 0;width:100%;max-width:100%;border-radius:24px 24px 0 0;border-bottom:0}
+  dialog.modal .mb{padding-bottom:calc(20px + env(safe-area-inset-bottom,0px))}
+  .chips{flex-wrap:nowrap;overflow-x:auto;scrollbar-width:none;width:100%}
+  .chips button{flex:none}
+}
 </style>
 </head>
 <body>
@@ -189,16 +216,17 @@ dialog.modal h3{margin:0 0 8px;font:400 26px/1.1 var(--disp)}
 <div class="app" id="app" hidden>
   <aside class="side" aria-label="Secciones">
     <div class="logo"><img src="/brand/minuta-wordmark-reverse.svg" alt="Minuta"><small>Admin</small></div>
-    <button class="nav" data-v="resumen" aria-current="page"><svg class="ico"><use href="#i-home"/></svg><span class="t">Resumen</span></button>
-    <button class="nav" data-v="locales"><svg class="ico"><use href="#i-store"/></svg><span class="t">Locales</span><span class="n" id="nLoc" hidden></span></button>
-    <button class="nav" data-v="solicitudes"><svg class="ico"><use href="#i-inbox"/></svg><span class="t">Solicitudes</span><span class="n" id="nSol" hidden></span></button>
-    <button class="nav" data-v="nuevo"><svg class="ico"><use href="#i-plus"/></svg><span class="t">Nuevo local</span></button>
-    <button class="nav" data-v="pagina"><svg class="ico"><use href="#i-page"/></svg><span class="t">Página de inicio</span></button>
+    <button class="nav" data-v="resumen" aria-current="page"><svg class="ico"><use href="#i-home"/></svg><span class="t">Resumen</span><span class="ts">Resumen</span></button>
+    <button class="nav" data-v="locales"><svg class="ico"><use href="#i-store"/></svg><span class="t">Locales</span><span class="ts">Locales</span><span class="n" id="nLoc" hidden></span></button>
+    <button class="nav" data-v="solicitudes"><svg class="ico"><use href="#i-inbox"/></svg><span class="t">Solicitudes</span><span class="ts">Bandeja</span><span class="n" id="nSol" hidden></span></button>
+    <button class="nav" data-v="nuevo"><svg class="ico"><use href="#i-plus"/></svg><span class="t">Nuevo local</span><span class="ts">Nuevo</span></button>
+    <button class="nav" data-v="pagina"><svg class="ico"><use href="#i-page"/></svg><span class="t">Página de inicio</span><span class="ts">Página</span></button>
     <div class="sp"></div>
     <button class="nav" id="salir"><svg class="ico"><use href="#i-out"/></svg><span class="t">Salir</span></button>
     <div class="foot">Soporte que ven los locales:<br><span class="mono">+54 11 5249-5689</span></div>
   </aside>
   <main class="main">
+    <div class="mtop"><img src="/brand/minuta-wordmark-reverse.svg" alt="Minuta"><button id="salir2"><svg class="ico" style="width:16px;height:16px"><use href="#i-out"/></svg>Salir</button></div>
     <div class="topbar"><div><h1 id="vTit">Resumen</h1><p id="vSub"></p></div><div class="row" id="vActs"></div></div>
     <div id="view"></div>
   </main>
@@ -277,7 +305,8 @@ function ir(v){
   pintar();window.scrollTo(0,0);
 }
 $$('.nav[data-v]').forEach(function(b){b.addEventListener('click',function(){ir(b.getAttribute('data-v'))})});
-$('#salir').addEventListener('click',function(){st.del('sp');location.hash='';location.reload()});
+['#salir','#salir2'].forEach(function(id){$(id).addEventListener('click',function(){st.del('sp');location.hash='';location.reload()})});
+window.addEventListener('hashchange',function(){if(DATA){var v=location.hash.slice(1);if(v&&v!==V)ir(v)}});
 
 function pintar(){
   if(!DATA)return;
