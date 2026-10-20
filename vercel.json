@@ -2,6 +2,19 @@
   "rewrites": [
     { "source": "/inicio", "destination": "/inicio.html" },
     { "source": "/admin", "destination": "/index.html" },
-    { "source": "/superadmin", "destination": "/superadmin.html" }
+    { "source": "/superadmin", "destination": "/superadmin.html" },
+    { "source": "/terminos", "destination": "/legal.html" },
+    { "source": "/privacidad", "destination": "/legal.html" },
+    { "source": "/arrepentimiento", "destination": "/legal.html" }
+  ],
+  "headers": [
+    {
+      "source": "/(.*)",
+      "headers": [
+        { "key": "X-Content-Type-Options", "value": "nosniff" },
+        { "key": "Referrer-Policy", "value": "strict-origin-when-cross-origin" },
+        { "key": "X-Frame-Options", "value": "SAMEORIGIN" }
+      ]
+    }
   ]
 }

@@ -1,4 +1,5 @@
-const { getConfig, saveConfig, sanitizeConfig, isOpen } = require('../lib/config');
+const { getConfig, saveConfig, sanitizeConfig, isOpen, imgKey, imagenesDe } = require('../lib/config');
+const redis = require('../lib/redis');
 const T = require('../lib/tenants');
 const { send, fail, body, slugFromReq } = require('../lib/http');
 
@@ -22,7 +23,12 @@ module.exports = async (req, res) => {
     if (req.method === 'PUT') {
       T.requireOwner(req, tenant);
       const cfg = sanitizeConfig(body(req));
+      const antes = imagenesDe(await getConfig(tenant.slug));
       await saveConfig(tenant.slug, cfg);
+      // Borra las fotos de productos eliminados o reemplazados.
+      const ahora = imagenesDe(cfg);
+      const sobran = [...antes.keys()].filter((id) => !ahora.has(id));
+      if (sobran.length) await redis.cmd('DEL', ...sobran.map((id) => imgKey(tenant.slug, id))).catch(() => {});
       if (tenant.nombre !== cfg.nombre) {
         tenant.nombre = cfg.nombre;
         await T.saveTenant(tenant);

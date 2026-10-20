@@ -8,7 +8,7 @@ module.exports = async (req, res) => {
     const tenant = await T.requireTenant(req);
     T.requireOwner(req, tenant);
     if (req.method === 'GET') {
-      return send(res, 200, { orders: await listOrders(tenant.slug, 60), estado: T.estado(tenant), venceEl: tenant.venceEl });
+      return send(res, 200, { orders: await listOrders(tenant.slug, Math.min(200, Math.max(1, Number((req.query || {}).n) || 60))), estado: T.estado(tenant), venceEl: tenant.venceEl });
     }
     if (req.method === 'PATCH') {
       const b = body(req);

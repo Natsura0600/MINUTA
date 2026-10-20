@@ -2,195 +2,375 @@
 <html lang="es-AR">
 <head>
 <meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Pedidos online para tu hamburguesería</title>
-<meta name="description" content="Tu tienda online con logo y colores propios, pedidos al instante en tu panel y seguimiento para tus clientes. Suscribite y empezá a vender.">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Minuta · Pedidos a la minuta</title>
+<meta name="description" content="Minuta: tu menú online, tus pedidos, sin comisiones. Para restaurantes, bodegones, rotiserías, pizzerías y hamburgueserías.">
+<meta name="theme-color" content="#8E1B2C">
+<link rel="icon" href="/brand/minuta-mark.svg" type="image/svg+xml">
+<meta property="og:title" content="Minuta · Pedidos a la minuta">
+<meta property="og:description" content="Tu menú online, tus pedidos, sin comisiones.">
+<meta property="og:image" content="/brand/minuta-mark.png">
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bowlby+One&family=DM+Sans:wght@400;500;700&display=swap">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=DM+Serif+Display:ital@0;1&family=Figtree:wght@400;500;600;700&family=IBM+Plex+Mono:wght@500;600&display=swap">
 <style>
-:root{--bg:#FCFBF8;--surf:#fff;--ink:#2A1608;--mute:#6f5a49;--line:#e0d4c5;--red:#C8261A;--onred:#fff;--hero:#F6B800;--heroink:#2A1608;--ok:#1f7a3d;color-scheme:light}
-@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--bg:#1B120C;--surf:#281A11;--ink:#F7EBDD;--mute:#c2ad99;--line:#4a3626;--red:#FF5A44;--onred:#1B120C;--ok:#4cc77a;color-scheme:dark}}
+/* Página de inicio: clásica de bodegón. Mantel crema, tinto de la casa, pizarra en DM Serif. */
+:root{
+  --surface:#FBF6EE;--raised:#FFFFFF;--mantel:#F4E7D3;--ink:#231C19;--mute:#6E625A;--line:#E6DACA;
+  --tinto:#8E1B2C;--ontinto:#fff;--dorado:#E3A33A;--ondorado:#231C19;--sifon:#1F6B5C;--onsifon:#fff;--error:#B54708;
+  --disp:"DM Serif Display",Georgia,serif;--sans:"Figtree",system-ui,sans-serif;--mono:"IBM Plex Mono",ui-monospace,monospace;
+  --shadow:0 1px 0 rgba(35,28,25,.08),0 3px 10px rgba(35,28,25,.06);--float:0 8px 24px rgba(35,28,25,.2);color-scheme:light
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){--surface:#1B1715;--raised:#26201D;--mantel:#3A2F27;--ink:#F6EEE4;--mute:#B9AC9E;--line:#3D342E;--tinto:#E06A78;--ontinto:#1B1715;--sifon:#6CC3AE;--onsifon:#1B1715;--error:#FF9F6B;color-scheme:dark}}
+:root[data-theme="dark"]{--surface:#1B1715;--raised:#26201D;--mantel:#3A2F27;--ink:#F6EEE4;--mute:#B9AC9E;--line:#3D342E;--tinto:#E06A78;--ontinto:#1B1715;--sifon:#6CC3AE;--onsifon:#1B1715;--error:#FF9F6B;color-scheme:dark}
 *{box-sizing:border-box}
-html{scroll-behavior:smooth}
-body{margin:0;background:var(--bg);color:var(--ink);font:17px/1.55 "DM Sans",system-ui,sans-serif}
-.w{max-width:980px;margin:0 auto;padding-left:max(18px,env(safe-area-inset-left,0px));padding-right:max(18px,env(safe-area-inset-right,0px))}
-h1,h2{font-family:"Bowlby One","Arial Black",sans-serif;font-weight:400;line-height:1.02;margin:0;text-wrap:balance}
-h2{font-size:clamp(28px,6vw,40px);margin-bottom:12px}
+[hidden]{display:none!important}
+html{scroll-behavior:smooth;background:var(--surface)}
+body{margin:0;background:var(--surface);color:var(--ink);font:16px/1.6 var(--sans);overflow-x:hidden}
+img{max-width:100%;display:block}
 a{color:inherit}
-.btn{display:inline-block;background:var(--red);color:var(--onred);border:0;border-radius:12px;padding:14px 22px;font:700 17px/1.1 "DM Sans",system-ui,sans-serif;cursor:pointer;text-decoration:none;text-align:center}
-.btn.ghost{background:transparent;color:inherit;border:2px solid currentColor}
-.top{background:var(--hero);color:var(--heroink)}
-.nav{display:flex;align-items:center;justify-content:space-between;gap:12px;padding-block:16px;flex-wrap:wrap}
-.nav b{font:400 20px/1 "Bowlby One","Arial Black",sans-serif}
-.nav a.btn{padding:10px 16px;font-size:15px;background:var(--heroink);color:var(--hero)}
-.hero{padding-block:40px 64px;display:grid;gap:28px;grid-template-columns:1.15fr .85fr;align-items:center}
-.hero h1{font-size:clamp(40px,9vw,76px)}
-.hero p{font-size:19px;max-width:34ch;margin:18px 0 24px}
+:focus-visible{outline:2px solid var(--tinto);outline-offset:3px}
+.w{max-width:1080px;margin:0 auto;padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px))}
+h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.08;margin:0;text-wrap:balance;letter-spacing:-.01em}
+.cap{font:600 12px/16px var(--sans);letter-spacing:.12em;text-transform:uppercase;color:var(--tinto)}
+.mute{color:var(--mute)}
+.ico{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
+.btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--tinto);color:var(--ontinto);border:1.5px solid var(--tinto);border-radius:10px;padding:13px 22px;font:700 15px/1.2 var(--sans);cursor:pointer;text-decoration:none;text-align:center}
+.btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
+.btn.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}
+.btn:disabled{opacity:.55;cursor:not-allowed}
+@media (prefers-reduced-motion:no-preference){.btn{transition:transform .15s,box-shadow .15s}.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}}
+/* Nav */
+.nav{position:sticky;top:0;z-index:20;background:color-mix(in srgb,var(--surface) 92%,transparent);backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);border-bottom:1px solid var(--line)}
+.nav .w{display:flex;align-items:center;justify-content:space-between;gap:16px;height:68px}
+.nav .logo img{height:34px;width:auto}
+.nav .links{display:flex;gap:26px;align-items:center}
+.nav .links a{text-decoration:none;font-weight:600;font-size:15px}
+.nav .links a:not(.btn):hover{color:var(--tinto)}
+.nav .btn{padding:10px 16px;font-size:14px}
+@media (max-width:760px){.nav .links a:not(.btn){display:none}.nav .logo img{height:28px}}
+.logo-dark{display:none}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo-light{display:none}:root:not([data-theme="light"]) .logo-dark{display:block}}
+/* Hero */
+.hero{padding:64px 0 72px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.hero h1{font-size:clamp(44px,7vw,76px);margin:14px 0 18px}
+.hero h1 em{font-style:italic;color:var(--tinto)}
+.hero p.baj{font-size:19px;max-width:36ch;margin:0 0 28px;color:var(--mute)}
 .hero .acts{display:flex;gap:12px;flex-wrap:wrap}
-.hero .btn{background:var(--heroink);color:var(--hero)}
-.hero .btn.ghost{background:transparent;color:var(--heroink);border-color:var(--heroink)}
-.mock{background:var(--surf);color:var(--ink);border-radius:22px;padding:16px;box-shadow:0 18px 40px rgba(42,22,8,.22);transform:rotate(1.5deg);min-width:0}
-.mock .mh{display:flex;gap:10px;align-items:center;background:var(--red);color:var(--onred);border-radius:14px;padding:12px 14px;font:400 18px/1 "Bowlby One",sans-serif}
-.mock .mh i{width:34px;height:34px;border-radius:10px;background:#fff;display:block}
-.mock .it{display:flex;justify-content:space-between;gap:10px;padding:11px 2px;border-bottom:1px dashed var(--line);font-weight:700;font-size:15px}
-.mock .it small{display:block;font-weight:400;color:var(--mute)}
-.mock .st{margin-top:12px;display:flex;gap:6px}
-.mock .st span{flex:1;height:7px;border-radius:9px;background:var(--line)}
-.mock .st span.on{background:var(--ok)}
-.mock p{margin:8px 0 0;font-size:14px;color:var(--mute);max-width:none}
-section{padding-block:56px}
-.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:16px;margin-top:22px;counter-reset:s}
-.steps li{list-style:none;background:var(--surf);border:1.5px solid var(--line);border-radius:16px;padding:20px;counter-increment:s;min-width:0}
-.steps li::before{content:counter(s);display:grid;place-items:center;width:34px;height:34px;border-radius:50%;background:var(--red);color:var(--onred);font:700 16px/1 system-ui;margin-bottom:12px}
-.steps b{display:block;font-size:19px;margin-bottom:4px}
-.steps p{margin:0;color:var(--mute);font-size:16px}
-.band{background:var(--surf);border-block:1.5px solid var(--line)}
-.plan{display:grid;grid-template-columns:1fr 1fr;gap:28px;align-items:start}
-.card{background:var(--bg);border:2px solid var(--ink);border-radius:22px;padding:26px;min-width:0}
-.price{font:400 clamp(44px,10vw,64px)/1 "Bowlby One",sans-serif;margin:6px 0 0}
-.price small{font:500 18px "DM Sans",sans-serif;color:var(--mute)}
-.alta{color:var(--mute);margin:6px 0 18px}
-.inc{margin:0;padding:0;display:grid;gap:10px}
-.inc li{list-style:none;display:grid;grid-template-columns:24px 1fr;gap:10px}
-.inc li::before{content:"✓";color:var(--ok);font-weight:700}
-.faq details{border-bottom:1.5px solid var(--line);padding:14px 0}
-.faq summary{cursor:pointer;font-weight:700;font-size:18px}
-.faq p{margin:8px 0 0;color:var(--mute)}
-form{background:var(--surf);border:1.5px solid var(--line);border-radius:20px;padding:22px;display:grid;gap:14px;max-width:560px}
-label{display:block;font-weight:700;font-size:15px}
+.hero .tel{margin-top:18px;font-size:14px;color:var(--mute)}
+.hero .tel a{font-family:var(--mono);font-weight:600;color:var(--ink)}
+.plate{position:relative;min-width:0}
+.plate .mantel{position:absolute;inset:-18px -18px 28px 30px;border-radius:24px;background-color:#FBF6EE;background-image:linear-gradient(90deg,rgba(142,27,44,.45) 50%,transparent 0),linear-gradient(rgba(142,27,44,.45) 50%,transparent 0);background-size:32px 32px;transform:rotate(2deg)}
+.plate .foto{position:relative;border-radius:24px;overflow:hidden;box-shadow:var(--float);border:6px solid var(--raised);aspect-ratio:4/3.4;background:var(--mantel)}
+.plate .foto img{width:100%;height:100%;object-fit:cover}
+.ticket{position:relative;background:var(--raised);border-radius:10px;box-shadow:var(--float);padding:22px 22px 18px;font:500 14px/1.6 var(--mono);max-width:360px;margin-left:auto}
+.ticket::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:10px;background:radial-gradient(circle at 8px -2px,transparent 8px,var(--raised) 8.5px) 0 0/16px 10px repeat-x}
+.ticket .tt{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px dashed var(--line);padding-bottom:10px;margin-bottom:10px}
+.ticket .tt b{font-size:18px}
+.ticket .st{font:700 12px/1 var(--sans);background:var(--dorado);color:var(--ondorado);padding:5px 10px;border-radius:999px}
+.ticket .l{display:flex;justify-content:space-between;gap:10px}
+.ticket .l small{display:block;color:var(--mute);font-family:var(--sans);font-size:12px}
+.ticket .tot{border-top:1.5px dashed var(--line);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:600;font-size:16px}
+.ticket .by{margin-top:12px;font:600 12px var(--sans);color:var(--mute);display:flex;align-items:center;gap:6px}
+.ticket .by img{width:16px;height:16px}
+@media (max-width:860px){.hero{grid-template-columns:1fr;padding:40px 0 56px;gap:40px}.plate{max-width:440px;margin:0 auto;width:calc(100% - 24px)}.ticket{margin:0 auto}}
+/* Banda de mantel */
+.band{height:48px;background-color:#FBF6EE;background-image:linear-gradient(90deg,rgba(142,27,44,.45) 50%,transparent 0),linear-gradient(rgba(142,27,44,.45) 50%,transparent 0);background-size:32px 32px;border-block:1px solid var(--line)}
+/* Secciones */
+section{padding:84px 0}
+.head{text-align:center;max-width:640px;margin:0 auto 44px}
+.head h2{font-size:clamp(34px,5vw,50px);margin-top:10px}
+.head p{color:var(--mute);margin:14px 0 0;font-size:17px}
+.orn{display:flex;align-items:center;gap:14px;justify-content:center;margin-top:16px;color:var(--dorado)}
+.orn::before,.orn::after{content:"";height:1px;width:56px;background:var(--line)}
+.rubros{display:flex;flex-wrap:wrap;gap:10px;justify-content:center;margin-top:-10px}
+.rubros span{padding:8px 16px;border:1px solid var(--line);border-radius:999px;background:var(--raised);font-weight:600;font-size:15px}
+.steps{display:grid;grid-template-columns:repeat(3,1fr);gap:22px;list-style:none;padding:0;margin:0;counter-reset:s}
+.steps li{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:28px 24px;box-shadow:var(--shadow);counter-increment:s;position:relative;min-width:0}
+.steps li::before{content:counter(s);position:absolute;top:18px;right:22px;font:400 46px/1 var(--disp);color:var(--mantel)}
+.steps .ic{width:48px;height:48px;border-radius:50%;background:var(--mantel);display:grid;place-items:center;color:var(--tinto);margin-bottom:16px}
+.steps h3{font-size:24px;margin-bottom:8px}
+.steps p{margin:0;color:var(--mute)}
+@media (max-width:860px){.steps{grid-template-columns:1fr}}
+.alt{background:var(--mantel)}
+.feat{display:grid;grid-template-columns:repeat(2,1fr);gap:16px 40px;max-width:900px;margin:0 auto}
+.feat div{display:grid;grid-template-columns:30px 1fr;gap:12px;align-items:start}
+.feat div svg{color:var(--sifon);margin-top:2px}
+@media (max-width:700px){.feat{grid-template-columns:1fr}}
+/* Carta de precio */
+.carta{max-width:560px;margin:0 auto;background:var(--raised);border-radius:10px;padding:10px;box-shadow:var(--float)}
+.carta .in{border:1.5px solid var(--ink);outline:1px solid var(--ink);outline-offset:-7px;border-radius:6px;padding:38px 34px 32px;text-align:center}
+.carta h3{font-size:34px}
+.carta .ln{display:flex;align-items:baseline;gap:10px;margin:26px 0 6px;text-align:left}
+.carta .ln b{font:400 22px var(--disp)}
+.carta .ln i{flex:1;border-bottom:2px dotted var(--mute);transform:translateY(-6px)}
+.carta .ln span{font:600 26px var(--mono);color:var(--tinto);white-space:nowrap}
+.carta .per{color:var(--mute);text-align:right;margin:0;font-size:14px}
+.carta .alta{margin:14px 0 0;color:var(--sifon);font-weight:700}
+.carta ul{list-style:none;padding:0;margin:24px 0 28px;text-align:left;display:grid;gap:10px}
+.carta li{display:grid;grid-template-columns:22px 1fr;gap:10px;font-size:15px}
+.carta li::before{content:"";width:8px;height:8px;border-radius:50%;background:var(--dorado);margin:8px 0 0 6px}
+.carta .btn{width:100%}
+/* Galería */
+.gal{display:grid;grid-template-columns:repeat(auto-fill,minmax(230px,1fr));gap:16px}
+.gal figure{margin:0;background:var(--raised);border-radius:10px;overflow:hidden;box-shadow:var(--shadow)}
+.gal img{width:100%;aspect-ratio:4/3;object-fit:cover}
+.gal figcaption{padding:12px 14px;font:400 20px var(--disp)}
+/* FAQ */
+.faq{max-width:760px;margin:0 auto}
+.faq details{border-bottom:1px solid var(--line);padding:20px 0}
+.faq summary{cursor:pointer;font:400 23px/1.3 var(--disp);list-style:none;display:flex;justify-content:space-between;gap:16px}
+.faq summary::-webkit-details-marker{display:none}
+.faq summary::after{content:"+";font-family:var(--sans);color:var(--tinto);font-size:26px;line-height:1}
+.faq details[open] summary::after{content:"−"}
+.faq p{margin:10px 0 0;color:var(--mute)}
+/* Formulario */
+.sus{display:grid;grid-template-columns:.9fr 1.1fr;gap:48px;align-items:start}
+@media (max-width:860px){.sus{grid-template-columns:1fr}}
+.sus h2{font-size:clamp(34px,5vw,48px);margin:10px 0 14px}
+.contact{display:grid;gap:12px;margin-top:22px}
+.contact a{display:flex;align-items:center;gap:12px;text-decoration:none;padding:14px 16px;background:var(--raised);border:1px solid var(--line);border-radius:10px;font-weight:600}
+.contact a small{display:block;font-weight:400;color:var(--mute);font-size:13px}
+.contact a .mono{font-family:var(--mono)}
+form{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:28px;display:grid;gap:14px;box-shadow:var(--shadow)}
+label{display:block;font-weight:600;font-size:14px}
 label small{font-weight:400;color:var(--mute)}
-input,textarea{display:block;width:100%;margin-top:5px;padding:12px;border:1.5px solid var(--line);border-radius:10px;background:var(--bg);color:var(--ink);font:inherit}
+input,textarea,select{display:block;width:100%;margin-top:6px;padding:12px 14px;border:1.5px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);font:inherit}
+input:focus,textarea:focus,select:focus{border-color:var(--tinto);outline:none;box-shadow:0 0 0 3px color-mix(in srgb,var(--tinto) 18%,transparent)}
 textarea{resize:vertical}
+.two{display:grid;grid-template-columns:1fr 1fr;gap:14px}
+@media (max-width:520px){.two{grid-template-columns:1fr}}
 .hp{position:absolute;left:-9999px;width:1px;height:1px;overflow:hidden}
-.msg{min-height:1.4em;font-weight:700}
-.msg.err{color:var(--red)}.msg.ok{color:var(--ok)}
-.ok-box{background:var(--surf);border:2px solid var(--ok);border-radius:20px;padding:24px;max-width:560px}
-.ok-box h3{font:400 26px/1.1 "Bowlby One",sans-serif;margin:0 0 8px}
-footer{padding-block:34px;color:var(--mute);font-size:15px}
-footer .w{display:flex;gap:14px;justify-content:space-between;flex-wrap:wrap}
-@media (max-width:760px){.hero,.plan{grid-template-columns:1fr}.steps{grid-template-columns:1fr}.mock{transform:none}section{padding-block:44px}}
-:focus-visible{outline:3px solid var(--red);outline-offset:2px}
+.msg{min-height:1.4em;font-weight:700;margin:0}
+.msg.err{color:var(--error)}
+.legalnote{font-size:13px;color:var(--mute);margin:0}
+.ok-box{background:var(--raised);border:1.5px solid var(--sifon);border-radius:10px;padding:32px;text-align:center}
+.ok-box h3{font-size:32px;margin-bottom:8px}
+/* Pie */
+footer{background:#231C19;color:#E6DACA;padding:56px 0 32px;font-size:14px}
+footer .cols{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px}
+@media (max-width:760px){footer .cols{grid-template-columns:1fr}}
+footer h4{font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#B9AC9E;margin:0 0 14px}
+footer a{color:#FBF6EE;text-decoration:none}
+footer a:hover{text-decoration:underline}
+footer ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
+footer .tag{font:400 italic 22px var(--disp);color:#FBF6EE;margin:16px 0 0}
+footer .botones{display:flex;gap:10px;flex-wrap:wrap;margin-top:28px;padding-top:24px;border-top:1px solid #3D342E}
+footer .botones a{border:1.5px solid #FBF6EE;border-radius:8px;padding:9px 14px;font-weight:700}
+footer .tit{margin-top:22px;color:#B9AC9E;font-size:12px;line-height:1.7}
+/* Aparición al hacer scroll */
+@media (prefers-reduced-motion:no-preference){.rv{opacity:0;transform:translateY(16px);transition:opacity .6s,transform .6s cubic-bezier(.2,.8,.2,1)}.rv.in{opacity:1;transform:none}}
 </style>
 </head>
 <body>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+<symbol id="i-plato" viewBox="0 0 24 24"><circle cx="12" cy="13" r="8"/><circle cx="12" cy="13" r="4"/><path d="M4 4v4M20 4v4"/></symbol>
+<symbol id="i-comanda" viewBox="0 0 24 24"><path d="M6 3h12v18l-2-1.3-2 1.3-2-1.3-2 1.3-2-1.3L6 21V3z"/><path d="M9 8h6M9 12h6M9 16h3"/></symbol>
+<symbol id="i-envio" viewBox="0 0 24 24"><circle cx="6.5" cy="17" r="2.5"/><circle cx="17.5" cy="17" r="2.5"/><path d="M9 17h6M4 13h7l2-5h3l1.5 9"/></symbol>
+<symbol id="i-listo" viewBox="0 0 24 24"><circle cx="12" cy="12" r="8"/><path d="M8.5 12.5l2.5 2.5 4.5-5"/></symbol>
+<symbol id="i-wa" viewBox="0 0 24 24"><path d="M4 20l1.3-3.8A8 8 0 1 1 8 19z"/><path d="M9 9.5c0 3 2.5 5.5 5.5 5.5l1-1.5-2-1-1 .8a4 4 0 0 1-1.8-1.8l.8-1-1-2z"/></symbol>
+<symbol id="i-ig" viewBox="0 0 24 24"><rect x="4" y="4" width="16" height="16" rx="5"/><circle cx="12" cy="12" r="3.5"/></symbol>
+<symbol id="i-mail" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M3 7l9 6 9-6"/></symbol>
+</svg>
 
-<div class="top">
-<div class="w">
-<nav class="nav"><b id="marca">Picture Web Dev</b><a class="btn" href="#suscribirme">Quiero mi tienda</a></nav>
-<div class="hero">
-<div>
-<h1 id="titulo">Tu hamburguesería con pedidos online propios</h1>
-<p>Tus clientes piden desde el celular. Vos recibís el pedido al instante, les mandás el alias por WhatsApp y ellos ven cómo avanza.</p>
-<div class="acts"><a class="btn" href="#suscribirme">Suscribirme</a><a class="btn ghost" href="#plan">Ver el plan</a></div>
-</div>
-<div class="mock" aria-hidden="true">
-<div class="mh"><i></i>Tu Hamburguesería</div>
-<div class="it"><span>Clásica<small>Doble carne, cheddar, pickles</small></span><span>$9.800</span></div>
-<div class="it"><span>Bacon Smash<small>Panceta crocante, barbacoa</small></span><span>$11.500</span></div>
-<div class="st"><span class="on"></span><span class="on"></span><span class="on"></span><span></span></div>
-<p>Pedido #12 · Preparando</p>
-</div>
-</div>
-</div>
-</div>
+<nav class="nav"><div class="w">
+  <a class="logo" href="/inicio" aria-label="Minuta, inicio"><img class="logo-light" src="/brand/minuta-lockup.svg" alt="Minuta"><img class="logo-dark" src="/brand/minuta-wordmark-reverse.svg" alt="Minuta" style="height:28px"></a>
+  <div class="links"><a href="#como">Cómo funciona</a><a href="#precio">Precio</a><a href="#preguntas">Preguntas</a><a class="btn" href="#suscribirme">Quiero Minuta</a></div>
+</div></nav>
+
+<header class="w hero">
+  <div>
+    <span class="cap">Para restaurantes, bodegones y rotiserías</span>
+    <h1 id="titulo">Pedidos <em>a la minuta</em>.</h1>
+    <p class="baj" id="bajada">Tus clientes piden desde el celular, vos recibís la comanda al instante y el local se queda con todo.</p>
+    <div class="acts"><a class="btn" href="#suscribirme">Quiero mi menú online</a><a class="btn ghost" href="#como">Ver cómo funciona</a></div>
+    <p class="tel">¿Preferís hablar? Escribinos al <a id="telHero" href="https://wa.me/5491152495689" target="_blank" rel="noopener">+54 11 5249-5689</a></p>
+  </div>
+  <div class="plate" aria-hidden="true">
+    <div class="mantel"></div>
+    <div class="foto" id="heroFoto" hidden><img id="heroImg" alt=""></div>
+    <div class="ticket" id="heroTicket">
+      <div class="tt"><b>#0312</b><span class="st">En preparación</span></div>
+      <div class="l"><span>2× Mila napo<small>con fritas</small></span><span>$ 19.600</span></div>
+      <div class="l"><span>1× Flan casero<small>con dulce de leche</small></span><span>$ 4.200</span></div>
+      <div class="l"><span>1× Sifón</span><span>$ 1.500</span></div>
+      <div class="tot"><span>Total</span><span>$ 25.300</span></div>
+      <div class="by"><img src="/brand/minuta-mark.svg" alt="">Retiro 21:30 · Pedidos con Minuta</div>
+    </div>
+  </div>
+</header>
+
+<div class="band" aria-hidden="true"></div>
+
+<section id="para">
+  <div class="w">
+    <div class="head rv"><span class="cap">Para quién es</span><h2>Comida de verdad, hecha al toque</h2><p>Para cualquier local que cocina y quiere vender por su cuenta, sin pagarle comisión a las apps.</p></div>
+    <div class="rubros rv"><span>Bodegones</span><span>Rotiserías</span><span>Pizzerías</span><span>Hamburgueserías</span><span>Parrillas</span><span>Pastas</span><span>Cafeterías</span><span>Sushi</span><span>Viandas</span><span>Heladerías</span></div>
+  </div>
+</section>
+
+<section id="como" class="alt">
+  <div class="w">
+    <div class="head rv"><span class="cap">Cómo funciona</span><h2>Tres pasos y estás vendiendo</h2></div>
+    <ol class="steps">
+      <li class="rv"><div class="ic"><svg class="ico"><use href="#i-plato"/></svg></div><h3>Armás tu carta</h3><p>Subís tu logo, tus fotos y tus precios. Elegís tu color o un banner y la tipografía que va con tu local.</p></li>
+      <li class="rv"><div class="ic"><svg class="ico"><use href="#i-comanda"/></svg></div><h3>Te llegan las comandas</h3><p>Cada pedido entra a tu panel con una campanita. Lo aceptás, lo preparás y lo imprimís si querés.</p></li>
+      <li class="rv"><div class="ic"><svg class="ico"><use href="#i-envio"/></svg></div><h3>Retiro, take away o delivery</h3><p>Vos elegís cómo entregar. Tu cliente ve cómo avanza su pedido desde el celular.</p></li>
+    </ol>
+  </div>
+</section>
 
 <section>
-<div class="w">
-<h2>Cómo funciona</h2>
-<ol class="steps" style="padding:0">
-<li><b>Te suscribís</b><p>Completás el formulario de abajo. Revisamos tu solicitud y te escribimos.</p></li>
-<li><b>Armás tu tienda</b><p>Te damos tu usuario. Subís tu logo, elegís tu color y cargás tu menú, tus precios y tus barrios de envío.</p></li>
-<li><b>Empezás a vender</b><p>Compartís el link en Instagram y WhatsApp. Los pedidos te llegan al panel con un aviso sonoro.</p></li>
-</ol>
-</div>
+  <div class="w">
+    <div class="head rv"><span class="cap">Todo incluido</span><h2>Lo que trae Minuta</h2></div>
+    <div class="feat rv" id="feat"></div>
+  </div>
 </section>
 
-<section class="band" id="plan">
-<div class="w plan">
-<div>
-<h2>Un solo plan, todo incluido</h2>
-<p style="color:var(--mute);margin:0">Sin comisión por cada pedido: pagás una mensualidad y vendés todo lo que puedas.</p>
-</div>
-<div class="card">
-<b>Plan completo</b>
-<div class="price" id="precio">…</div>
-<p class="alta" id="alta"></p>
-<ul class="inc" id="incluye"></ul>
-<p style="margin:22px 0 0"><a class="btn" href="#suscribirme" style="display:block">Suscribirme</a></p>
-</div>
-</div>
+<section id="galeriaSec" class="alt" hidden>
+  <div class="w">
+    <div class="head rv"><span class="cap">Ya piden con Minuta</span><h2>Locales de la casa</h2></div>
+    <div class="gal" id="galeria"></div>
+  </div>
 </section>
 
-<section class="faq">
-<div class="w">
-<h2>Preguntas frecuentes</h2>
-<details><summary>¿Cómo les llega el pedido?</summary><p>Aparece al instante en tu panel, con un sonido para que no se te pase. Desde ahí lo vas pasando a “preparando”, “listo” y “entregado”, y tu cliente lo ve en su celular.</p></details>
-<details><summary>¿Cómo cobro?</summary><p>Tus clientes eligen efectivo o transferencia. Si eligen transferencia, desde el panel les mandás tu alias por WhatsApp con un toque y ellos te mandan el comprobante por ahí.</p></details>
-<details><summary>¿Cobran comisión por pedido?</summary><p>No. Pagás solamente la mensualidad.</p></details>
-<details><summary>¿Puedo cambiar mi menú y mis precios?</summary><p>Sí, cuando quieras y desde el celular: productos, precios, extras, horarios y costos de envío. También podés marcar algo como agotado por hoy.</p></details>
-<details><summary>¿Tengo mi propio link?</summary><p>Sí. Tu local tiene su propia dirección, con tu logo y tus colores, para compartir donde quieras.</p></details>
-</div>
+<section id="precio">
+  <div class="w">
+    <div class="head rv"><span class="cap">Precio</span><h2>Un solo plan, sin comisiones</h2><p>Pagás una mensualidad fija y vendés todo lo que puedas. Lo que cobrás es tuyo.</p></div>
+    <div class="carta rv"><div class="in">
+      <span class="cap">La carta</span>
+      <h3 id="marca2">Minuta completo</h3>
+      <div class="ln"><b>Plan mensual</b><i></i><span id="precioVal">Consultá</span></div>
+      <p class="per" id="periodo"></p>
+      <p class="alta" id="alta" hidden></p>
+      <ul id="incluye"></ul>
+      <a class="btn" href="#suscribirme">Suscribirme</a>
+    </div></div>
+  </div>
 </section>
 
-<section class="band" id="suscribirme">
-<div class="w">
-<h2>Suscribite</h2>
-<p style="color:var(--mute);margin:0 0 22px;max-width:50ch">Dejanos los datos de tu local. Revisamos tu solicitud y te escribimos por WhatsApp para dejarla lista y mandarte tu usuario.</p>
-<form id="f" novalidate>
-<label>Nombre de tu local<input id="nombre" maxlength="40" autocomplete="organization" required></label>
-<label>Tu WhatsApp <small>(con código de área, sin 0 ni 15)</small><input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="1155551234" maxlength="20" required></label>
-<label>Tu email <small>(ahí te llegan tus datos)</small><input id="email" type="email" autocomplete="email" maxlength="120" required></label>
-<label>Barrio o ciudad <small>(opcional)</small><input id="zona" maxlength="60"></label>
-<label>¿Algo que quieras contarnos? <small>(opcional)</small><textarea id="mensaje" rows="3" maxlength="300"></textarea></label>
-<div class="hp" aria-hidden="true"><label>No completar<input id="web" tabindex="-1" autocomplete="off"></label></div>
-<p class="msg" id="msg" role="alert"></p>
-<button class="btn" id="go" type="submit">Enviar solicitud</button>
-</form>
-<div class="ok-box" id="ok" hidden>
-<h3>¡Recibimos tu solicitud!</h3>
-<p style="margin:0">Te vamos a escribir por WhatsApp para dejar todo listo. Cuando esté aprobada, te mandamos tu usuario y contraseña.</p>
-</div>
-</div>
+<section id="preguntas" class="alt">
+  <div class="w">
+    <div class="head rv"><span class="cap">Preguntas</span><h2>Lo que nos preguntan siempre</h2></div>
+    <div class="faq rv">
+      <details><summary>¿Cómo me llega el pedido?</summary><p>Aparece al instante en tu panel, con un sonido de campana. Lo pasás a “En preparación”, “Listo” y “Entregado”, y tu cliente lo ve en su celular. Si tenés impresora, imprimís la comanda.</p></details>
+      <details><summary>¿Cómo cobro?</summary><p>Tus clientes eligen efectivo o transferencia. Si eligen transferencia, desde el panel les mandás tu alias por WhatsApp con un toque. La plata va directo a vos: Minuta no toca tus cobros.</p></details>
+      <details><summary>¿Cobran comisión por pedido?</summary><p>No. Pagás solamente la mensualidad.</p></details>
+      <details><summary>¿Sirve si no tengo hamburguesería?</summary><p>Sí. Elegís entre varias tipografías (bodegón, parrilla, pizzería, café, moderna y más), tu color o un banner con foto, y tus propias categorías: minutas, pastas, empanadas, postres, lo que tengas.</p></details>
+      <details><summary>¿Puedo cambiar el menú y los precios?</summary><p>Cuando quieras, desde el celular: platos, fotos, precios, extras, horarios, barrios de envío y pedido mínimo. También podés marcar algo como “hoy no hay”.</p></details>
+      <details><summary>¿Tengo mi propio link?</summary><p>Sí. Tu local tiene su dirección propia, con tu logo y tus colores, para compartir en Instagram, WhatsApp o en un QR en la mesa.</p></details>
+      <details><summary>¿Y si me quiero dar de baja?</summary><p>Cuando quieras, sin vueltas, desde el botón de baja al pie de esta página. Te damos un código del trámite al instante.</p></details>
+    </div>
+  </div>
 </section>
 
-<footer><div class="w"><span id="pie">Pedidos online para locales gastronómicos</span><span id="contacto"></span></div></footer>
+<section id="suscribirme">
+  <div class="w sus">
+    <div class="rv">
+      <span class="cap">Empezá hoy</span>
+      <h2>Pedí tu Minuta</h2>
+      <p class="mute">Dejanos los datos de tu local. Te escribimos por WhatsApp para dejar todo listo y pasarte tu usuario.</p>
+      <div class="contact" id="contacto">
+        <a id="cWa" href="https://wa.me/5491152495689" target="_blank" rel="noopener"><svg class="ico"><use href="#i-wa"/></svg><span>WhatsApp<small class="mono" id="cWaTxt">+54 11 5249-5689</small></span></a>
+        <a id="cIg" hidden target="_blank" rel="noopener"><svg class="ico"><use href="#i-ig"/></svg><span>Instagram<small id="cIgTxt"></small></span></a>
+        <a id="cMail" hidden><svg class="ico"><use href="#i-mail"/></svg><span>Email<small id="cMailTxt"></small></span></a>
+      </div>
+    </div>
+    <div class="rv">
+      <form id="f" novalidate>
+        <div class="two"><label>Nombre de tu local<input id="nombre" maxlength="40" autocomplete="organization" required></label>
+        <label>Rubro<select id="rubro"><option value="">Elegí uno</option><option>Bodegón / restaurante</option><option>Rotisería</option><option>Pizzería</option><option>Hamburguesería</option><option>Parrilla</option><option>Pastas</option><option>Cafetería / pastelería</option><option>Sushi</option><option>Viandas</option><option>Otro</option></select></label></div>
+        <div class="two"><label>Tu WhatsApp <small>(con código de área)</small><input id="whatsapp" type="tel" inputmode="tel" autocomplete="tel" placeholder="11 5555-1234" maxlength="20" required></label>
+        <label>Tu email <small>(te llegan tus datos)</small><input id="email" type="email" autocomplete="email" maxlength="120" required></label></div>
+        <label>Barrio o ciudad <small>(opcional)</small><input id="zona" maxlength="60"></label>
+        <label>¿Algo que quieras contarnos? <small>(opcional)</small><textarea id="mensaje" rows="3" maxlength="300"></textarea></label>
+        <div class="hp" aria-hidden="true"><label>No completar<input id="web" tabindex="-1" autocomplete="off"></label></div>
+        <p class="legalnote">Al enviar aceptás que te contactemos por WhatsApp o email por tu solicitud. Más info en la <a href="/privacidad">política de privacidad</a>.</p>
+        <p class="msg" id="msg" role="alert"></p>
+        <button class="btn" id="go" type="submit">Enviar solicitud</button>
+      </form>
+      <div class="ok-box" id="ok" hidden>
+        <h3>¡Recibimos tu solicitud!</h3>
+        <p class="mute" style="margin:0 0 18px">Te escribimos por WhatsApp para dejar todo listo. Cuando esté aprobada, te pasamos tu usuario y contraseña.</p>
+        <a class="btn wa" id="okWa" target="_blank" rel="noopener" href="https://wa.me/5491152495689"><svg class="ico"><use href="#i-wa"/></svg>Escribinos ahora</a>
+      </div>
+    </div>
+  </div>
+</section>
+
+<footer>
+  <div class="w">
+    <div class="cols">
+      <div><img src="/brand/minuta-wordmark-reverse.svg" alt="Minuta" style="height:36px"><p class="tag">Pedidos a la minuta.</p></div>
+      <div><h4>Contacto</h4><ul><li><a id="fWa" href="https://wa.me/5491152495689" target="_blank" rel="noopener">WhatsApp +54 11 5249-5689</a></li><li id="fIgLi" hidden><a id="fIg" target="_blank" rel="noopener"></a></li><li id="fMailLi" hidden><a id="fMail"></a></li></ul></div>
+      <div><h4>Legales</h4><ul><li><a href="/terminos">Términos y condiciones</a></li><li><a href="/privacidad">Política de privacidad</a></li><li><a href="https://www.argentina.gob.ar/produccion/defensadelconsumidor/formulario" target="_blank" rel="noopener">Defensa de las y los consumidores. Para reclamos ingrese aquí</a></li></ul></div>
+    </div>
+    <div class="botones"><a href="/arrepentimiento?tipo=arrepentimiento">Botón de arrepentimiento</a><a href="/arrepentimiento?tipo=baja">Botón de baja</a></div>
+    <div class="tit" id="titular"></div>
+  </div>
+</footer>
 
 <script>
 'use strict';
 var $=function(s){return document.querySelector(s)};
 var esc=function(s){return String(s==null?'':s).replace(/[&<>"']/g,function(c){return {'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]})};
-
-function pintarPlan(p){
-  $('#marca').textContent=p.marca;
-  $('#titulo').textContent=p.titulo;
-  document.title=p.marca+' · Pedidos online para tu local';
-  $('#precio').innerHTML=p.precio?esc(p.precio)+' <small>'+esc(p.periodo)+'</small>':'<small style="font-size:26px">Consultá el precio</small>';
-  $('#alta').textContent=p.alta||'';
-  $('#incluye').innerHTML=p.incluye.map(function(x){return '<li>'+esc(x)+'</li>'}).join('');
-  var c=[];
-  if(p.whatsapp)c.push('<a href="https://wa.me/'+esc(p.whatsapp)+'" target="_blank" rel="noopener">WhatsApp</a>');
-  if(p.instagram)c.push('<a href="https://instagram.com/'+esc(p.instagram)+'" target="_blank" rel="noopener">@'+esc(p.instagram)+'</a>');
-  $('#contacto').innerHTML=c.join(' · ');
+var WA='5491152495689';
+function telTxt(n){var d=String(n).replace(/\D/g,'');var m=d.match(/^549?(11|2\d{2}|3\d{2})(\d{3,4})(\d{4})$/);return m?'+54 '+m[1]+' '+m[2]+'-'+m[3]:'+'+d}
+var FEAT_ICO='<svg class="ico"><use href="#i-listo"/></svg>';
+var DEFAULT_INC=['Menú online con tu logo, tu color o tu banner, y la tipografía que va con tu local','Fotos de cada plato, etiquetas sin TACC y veggie, y platos destacados','Dirección propia para tu local','Comandas al instante con aviso sonoro y ticket para imprimir','Retiro en el local, take away con hora y delivery con costo por barrio','Alias de transferencia por WhatsApp con un toque','Tus clientes siguen el pedido desde el celular','Ventas del día y lo más pedido, a la vista','Sin comisión por pedido'];
+function pintarIncluye(inc){
+  $('#incluye').innerHTML=inc.map(function(x){return '<li>'+esc(x)+'</li>'}).join('');
+  $('#feat').innerHTML=inc.map(function(x){return '<div>'+FEAT_ICO+'<span>'+esc(x)+'</span></div>'}).join('');
 }
-fetch('/api/plan').then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.plan)pintarPlan(j.plan)}).catch(function(){
-  $('#precio').innerHTML='<small style="font-size:26px">Consultá el precio</small>';
-});
+pintarIncluye(DEFAULT_INC);
+function pintarPlan(p){
+  if(p.titulo&&p.titulo!=='Tu menú online, tus pedidos, sin comisiones')$('#titulo').textContent=p.titulo;
+  if(p.bajada)$('#bajada').textContent=p.bajada;
+  document.title=(p.marca||'Minuta')+' · Pedidos a la minuta';
+  $('#marca2').textContent=(p.marca||'Minuta')+' completo';
+  $("#precioVal").textContent=p.precio||'Consultá';
+  $('#periodo').textContent=p.precio?p.periodo:'Escribinos y te pasamos el precio';
+  var al=$('#alta');al.hidden=!p.alta;al.textContent=p.alta||'';
+  pintarIncluye(p.incluye&&p.incluye.length?p.incluye:DEFAULT_INC);
+  var wa=p.whatsapp||WA,u='https://wa.me/'+wa,t=telTxt(wa);
+  ['#telHero','#cWa','#fWa','#okWa'].forEach(function(s){$(s).href=u+'?text='+encodeURIComponent('¡Hola! Quiero Minuta para mi local.')});
+  $('#telHero').textContent=t;$('#cWaTxt').textContent=t;$('#fWa').textContent='WhatsApp '+t;
+  if(p.instagram){$('#cIg').hidden=false;$('#cIg').href='https://instagram.com/'+p.instagram;$('#cIgTxt').textContent='@'+p.instagram;$('#fIgLi').hidden=false;$('#fIg').href='https://instagram.com/'+p.instagram;$('#fIg').textContent='Instagram @'+p.instagram}
+  if(p.email){$('#cMail').hidden=false;$('#cMail').href='mailto:'+p.email;$('#cMailTxt').textContent=p.email;$('#fMailLi').hidden=false;$('#fMail').href='mailto:'+p.email;$('#fMail').textContent=p.email}
+  if(p.hero){$('#heroImg').src='/api/foto?site=1&id=hero&v='+encodeURIComponent(p.hero);$('#heroFoto').hidden=false;$('#heroTicket').hidden=true}
+  var g=p.galeria||[];
+  if(g.length){$('#galeriaSec').hidden=false;$('#galeria').innerHTML=g.map(function(x){return '<figure class="rv"><img loading="lazy" alt="'+esc(x.titulo)+'" src="/api/foto?site=1&id='+encodeURIComponent(x.id)+'&v='+encodeURIComponent(x.v)+'">'+(x.titulo?'<figcaption>'+esc(x.titulo)+'</figcaption>':'')+'</figure>'}).join('');observar()}
+  var L=p.legal||{},tl=[];
+  if(L.titular)tl.push(esc(L.titular));if(L.cuit)tl.push('CUIT '+esc(L.cuit));if(L.domicilio)tl.push(esc(L.domicilio));if(L.email)tl.push(esc(L.email));
+  $('#titular').innerHTML=(tl.length?'Titular del servicio: '+tl.join(' · ')+'<br>':'')+'© '+new Date().getFullYear()+' '+esc(p.marca||'Minuta')+'. Los locales son responsables de sus productos, precios y entregas.';
+}
+fetch('/api/plan').then(function(r){return r.ok?r.json():null}).then(function(j){if(j&&j.plan)pintarPlan(j.plan);else pintarPlan({})}).catch(function(){pintarPlan({})});
+
+/* Aparición suave al hacer scroll */
+var io=null;
+function observar(){
+  var els=document.querySelectorAll('.rv:not(.in)');
+  if(!('IntersectionObserver' in window)){els.forEach(function(e){e.classList.add('in')});return}
+  io=io||new IntersectionObserver(function(es){es.forEach(function(e){if(e.isIntersecting){e.target.classList.add('in');io.unobserve(e.target)}})},{rootMargin:'0px 0px -8% 0px'});
+  els.forEach(function(e){io.observe(e)});
+}
+observar();
 
 $('#f').addEventListener('submit',async function(e){
   e.preventDefault();
   var m=$('#msg'),b=$('#go');m.className='msg';m.textContent='';
-  var data={nombre:$('#nombre').value.trim(),whatsapp:$('#whatsapp').value.trim(),email:$('#email').value.trim(),zona:$('#zona').value.trim(),mensaje:$('#mensaje').value.trim(),web:$('#web').value};
-  if(data.nombre.length<2){m.className='msg err';m.textContent='Escribí el nombre de tu local.';return}
-  if(data.whatsapp.replace(/\D/g,'').length<10){m.className='msg err';m.textContent='Escribí tu WhatsApp con código de área, por ejemplo 1155551234.';return}
-  if(!/^\S+@\S+\.\S{2,}$/.test(data.email)){m.className='msg err';m.textContent='Escribí un email válido.';return}
+  var data={nombre:$('#nombre').value.trim(),rubro:$('#rubro').value,whatsapp:$('#whatsapp').value.trim(),email:$('#email').value.trim(),zona:$('#zona').value.trim(),mensaje:$('#mensaje').value.trim(),web:$('#web').value};
+  var bad=function(t,el){m.className='msg err';m.textContent=t;if(el)$(el).focus()};
+  if(data.nombre.length<2)return bad('Escribí el nombre de tu local.','#nombre');
+  if(data.whatsapp.replace(/\D/g,'').length<10)return bad('Escribí tu WhatsApp con código de área, por ejemplo 11 5555-1234.','#whatsapp');
+  if(!/^\S+@\S+\.\S{2,}$/.test(data.email))return bad('Escribí un email válido.','#email');
   b.disabled=true;b.textContent='Enviando…';
   try{
     var r=await fetch('/api/suscribir',{method:'POST',headers:{'content-type':'application/json'},body:JSON.stringify(data)});
     var j=await r.json().catch(function(){return null});
-    if(!r.ok){m.className='msg err';m.textContent=(j&&j.mensaje)||'No pudimos enviar la solicitud. Probá de nuevo.';b.disabled=false;b.textContent='Enviar solicitud';return}
+    if(!r.ok){bad((j&&j.mensaje)||'No pudimos enviar la solicitud. Probá de nuevo.');b.disabled=false;b.textContent='Enviar solicitud';return}
     $('#f').hidden=true;$('#ok').hidden=false;$('#ok').scrollIntoView({behavior:'smooth',block:'center'});
-  }catch(err){m.className='msg err';m.textContent='No pudimos conectar. Revisá tu internet y probá de nuevo.';b.disabled=false;b.textContent='Enviar solicitud'}
+  }catch(err){bad('No pudimos conectar. Revisá tu internet y probá de nuevo.');b.disabled=false;b.textContent='Enviar solicitud'}
 });
 </script>
 </body>

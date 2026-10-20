@@ -1,8 +1,8 @@
 {
-  "name": "pedidos-multilocal",
-  "version": "2.0.0",
+  "name": "minuta",
+  "version": "3.0.0",
   "private": true,
-  "description": "Plataforma de pedidos online con Mercado Pago para varios locales, cada uno con su subdominio, su panel y su usuario.",
+  "description": "Minuta: pedidos online para restaurantes, bodegones, rotiserías y pizzerías. Cada local con su subdominio, su panel y su usuario.",
   "scripts": {
     "test": "node --test"
   },
