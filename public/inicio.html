@@ -52,19 +52,18 @@ h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.08;margin:0;text-
 .logo-dark{display:none}
 @media (prefers-color-scheme:dark){:root:not([data-theme="light"]) .logo-light{display:none}:root:not([data-theme="light"]) .logo-dark{display:block}}
 /* Hero */
-.hero{padding:64px 0 72px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
+.hero{padding-top:64px;padding-bottom:72px;display:grid;grid-template-columns:1.1fr .9fr;gap:48px;align-items:center}
 .hero h1{font-size:clamp(44px,7vw,76px);margin:14px 0 18px}
 .hero h1 em{font-style:italic;color:var(--tinto)}
 .hero p.baj{font-size:19px;max-width:36ch;margin:0 0 28px;color:var(--mute)}
 .hero .acts{display:flex;gap:12px;flex-wrap:wrap}
 .hero .tel{margin-top:18px;font-size:14px;color:var(--mute)}
-.hero .tel a{font-family:var(--mono);font-weight:600;color:var(--ink)}
+.hero .tel a{font-weight:700;color:var(--ink);white-space:nowrap}
 .plate{position:relative;min-width:0}
 .plate .mantel{position:absolute;inset:-18px -18px 28px 30px;border-radius:24px;background-color:#FBF6EE;background-image:linear-gradient(90deg,rgba(142,27,44,.45) 50%,transparent 0),linear-gradient(rgba(142,27,44,.45) 50%,transparent 0);background-size:32px 32px;transform:rotate(2deg)}
 .plate .foto{position:relative;border-radius:24px;overflow:hidden;box-shadow:var(--float);border:6px solid var(--raised);aspect-ratio:4/3.4;background:var(--mantel)}
 .plate .foto img{width:100%;height:100%;object-fit:cover}
 .ticket{position:relative;background:var(--raised);border-radius:10px;box-shadow:var(--float);padding:22px 22px 18px;font:500 14px/1.6 var(--mono);max-width:360px;margin-left:auto}
-.ticket::after{content:"";position:absolute;left:0;right:0;bottom:-10px;height:10px;background:radial-gradient(circle at 8px -2px,transparent 8px,var(--raised) 8.5px) 0 0/16px 10px repeat-x}
 .ticket .tt{display:flex;justify-content:space-between;align-items:center;border-bottom:1.5px dashed var(--line);padding-bottom:10px;margin-bottom:10px}
 .ticket .tt b{font-size:18px}
 .ticket .st{font:700 12px/1 var(--sans);background:var(--dorado);color:var(--ondorado);padding:5px 10px;border-radius:999px}
@@ -73,8 +72,8 @@ h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.08;margin:0;text-
 .ticket .tot{border-top:1.5px dashed var(--line);margin-top:10px;padding-top:10px;display:flex;justify-content:space-between;font-weight:600;font-size:16px}
 .ticket .by{margin-top:12px;font:600 12px var(--sans);color:var(--mute);display:flex;align-items:center;gap:6px}
 .ticket .by img{width:16px;height:16px}
-@media (max-width:720px){input,select,textarea{font-size:16px!important}.plate .mantel{inset:-12px -4px 28px 16px}section{padding:60px 0}.head{margin-bottom:30px}.hero .acts .btn{flex:1 1 100%}.carta .in{padding:30px 18px 24px}.carta .ln span{font-size:22px}form{padding:20px}.faq summary{font-size:20px}.nav .w{height:60px}}
-@media (max-width:860px){.hero{grid-template-columns:1fr;padding:40px 0 56px;gap:40px}.plate{max-width:440px;margin:0 auto;width:calc(100% - 24px)}.ticket{margin:0 auto}}
+@media (max-width:720px){input,select,textarea{font-size:16px!important}.plate .mantel{inset:-10px 0 20px 10px}.plate{width:calc(100% - 12px)}.ticket{max-width:none}.hero h1{font-size:46px}.hero p.baj{font-size:17px}section{padding:60px 0}.head{margin-bottom:30px}.hero .acts .btn{flex:1 1 100%}.carta .in{padding:30px 18px 24px}.carta .ln span{font-size:22px}form{padding:20px}.faq summary{font-size:20px}.nav .w{height:60px}}
+@media (max-width:860px){.hero{grid-template-columns:1fr;padding-top:36px;padding-bottom:56px;gap:40px}.plate{max-width:440px;margin:0 auto;width:calc(100% - 24px)}.ticket{margin:0 auto}}
 /* Banda de mantel */
 .band{height:48px;background-color:#FBF6EE;background-image:linear-gradient(90deg,rgba(142,27,44,.45) 50%,transparent 0),linear-gradient(rgba(142,27,44,.45) 50%,transparent 0);background-size:32px 32px;border-block:1px solid var(--line)}
 /* Secciones */
@@ -105,7 +104,8 @@ section{padding:84px 0}
 .carta .ln{display:flex;align-items:baseline;gap:10px;margin:26px 0 6px;text-align:left}
 .carta .ln b{font:400 22px var(--disp)}
 .carta .ln i{flex:1;border-bottom:2px dotted var(--mute);transform:translateY(-6px)}
-.carta .ln span{font:600 26px var(--mono);color:var(--tinto);white-space:nowrap}
+.carta .ln span{font:400 30px var(--disp);color:var(--tinto);white-space:nowrap}
+.carta .consulta{font:400 22px/1.3 var(--disp);margin:20px 0 0}
 .carta .per{color:var(--mute);text-align:right;margin:0;font-size:14px}
 .carta .alta{margin:14px 0 0;color:var(--sifon);font-weight:700}
 .carta ul{list-style:none;padding:0;margin:24px 0 28px;text-align:left;display:grid;gap:10px}
@@ -132,7 +132,7 @@ section{padding:84px 0}
 .contact{display:grid;gap:12px;margin-top:22px}
 .contact a{display:flex;align-items:center;gap:12px;text-decoration:none;padding:14px 16px;background:var(--raised);border:1px solid var(--line);border-radius:10px;font-weight:600}
 .contact a small{display:block;font-weight:400;color:var(--mute);font-size:13px}
-.contact a .mono{font-family:var(--mono)}
+
 form{background:var(--raised);border:1px solid var(--line);border-radius:10px;padding:28px;display:grid;gap:14px;box-shadow:var(--shadow)}
 label{display:block;font-weight:600;font-size:14px}
 label small{font-weight:400;color:var(--mute)}
@@ -241,10 +241,11 @@ footer .tit{margin-top:22px;color:#B9AC9E;font-size:12px;line-height:1.7}
     <div class="carta rv"><div class="in">
       <span class="cap">La carta</span>
       <h3 id="marca2">Minuta completo</h3>
-      <div class="ln"><b>Plan mensual</b><i></i><span id="precioVal">Consultá</span></div>
-      <p class="per" id="periodo"></p>
+      <div class="ln" id="lnPrecio" hidden><b>Plan mensual</b><i></i><span id="precioVal"></span></div>
+      <p class="per" id="periodo" hidden></p>
+      <p class="consulta" id="consulta">Escribinos y te pasamos el precio para tu local.</p>
       <p class="alta" id="alta" hidden></p>
-      <ul id="incluye"></ul>
+      <ul id="incluye"><li>Todas las funciones de Minuta, sin extras escondidos</li><li>Sin comisión por pedido: lo que vendés es tuyo</li><li>Soporte por WhatsApp al <span style="white-space:nowrap">+54 11 5249-5689</span></li><li>Te das de baja cuando quieras, sin vueltas</li></ul>
       <a class="btn" href="#suscribirme">Suscribirme</a>
     </div></div>
   </div>
@@ -272,7 +273,7 @@ footer .tit{margin-top:22px;color:#B9AC9E;font-size:12px;line-height:1.7}
       <h2>Pedí tu Minuta</h2>
       <p class="mute">Dejanos los datos de tu local. Te escribimos por WhatsApp para dejar todo listo y pasarte tu usuario.</p>
       <div class="contact" id="contacto">
-        <a id="cWa" href="https://wa.me/5491152495689" target="_blank" rel="noopener"><svg class="ico"><use href="#i-wa"/></svg><span>WhatsApp<small class="mono" id="cWaTxt">+54 11 5249-5689</small></span></a>
+        <a id="cWa" href="https://wa.me/5491152495689" target="_blank" rel="noopener"><svg class="ico"><use href="#i-wa"/></svg><span>WhatsApp<small id="cWaTxt">+54 11 5249-5689</small></span></a>
         <a id="cIg" hidden target="_blank" rel="noopener"><svg class="ico"><use href="#i-ig"/></svg><span>Instagram<small id="cIgTxt"></small></span></a>
         <a id="cMail" hidden><svg class="ico"><use href="#i-mail"/></svg><span>Email<small id="cMailTxt"></small></span></a>
       </div>
@@ -320,7 +321,6 @@ function telTxt(n){var d=String(n).replace(/\D/g,'');var m=d.match(/^549?(11|2\d
 var FEAT_ICO='<svg class="ico"><use href="#i-listo"/></svg>';
 var DEFAULT_INC=['Menú online con tu logo, tu color o tu banner, y la tipografía que va con tu local','Fotos de cada plato, etiquetas sin TACC y veggie, y platos destacados','Dirección propia para tu local','Comandas al instante con aviso sonoro y ticket para imprimir','Retiro en el local, take away con hora y delivery con costo por barrio','Alias de transferencia por WhatsApp con un toque','Tus clientes siguen el pedido desde el celular','Ventas del día y lo más pedido, a la vista','Sin comisión por pedido'];
 function pintarIncluye(inc){
-  $('#incluye').innerHTML=inc.map(function(x){return '<li>'+esc(x)+'</li>'}).join('');
   $('#feat').innerHTML=inc.map(function(x){return '<div>'+FEAT_ICO+'<span>'+esc(x)+'</span></div>'}).join('');
 }
 pintarIncluye(DEFAULT_INC);
@@ -329,8 +329,8 @@ function pintarPlan(p){
   if(p.bajada)$('#bajada').textContent=p.bajada;
   document.title=(p.marca||'Minuta')+' · Pedidos a la minuta';
   $('#marca2').textContent=(p.marca||'Minuta')+' completo';
-  $("#precioVal").textContent=p.precio||'Consultá';
-  $('#periodo').textContent=p.precio?p.periodo:'Escribinos y te pasamos el precio';
+  $('#lnPrecio').hidden=!p.precio;$('#periodo').hidden=!p.precio;$('#consulta').hidden=!!p.precio;$("#precioVal").textContent=p.precio||'';
+  $('#periodo').textContent=p.periodo||'';
   var al=$('#alta');al.hidden=!p.alta;al.textContent=p.alta||'';
   pintarIncluye(p.incluye&&p.incluye.length?p.incluye:DEFAULT_INC);
   var wa=p.whatsapp||WA,u='https://wa.me/'+wa,t=telTxt(wa);
