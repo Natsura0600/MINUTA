@@ -37,7 +37,7 @@ h1,h2,h3{font-family:var(--disp);font-weight:400;line-height:1.08;margin:0;text-
 .ico{width:22px;height:22px;flex:none;stroke:currentColor;fill:none;stroke-width:2;stroke-linecap:round;stroke-linejoin:round}
 .btn{display:inline-flex;align-items:center;justify-content:center;gap:8px;background:var(--tinto);color:var(--ontinto);border:1.5px solid var(--tinto);border-radius:10px;padding:13px 22px;font:700 15px/1.2 var(--sans);cursor:pointer;text-decoration:none;text-align:center}
 .btn.ghost{background:transparent;color:var(--ink);border-color:var(--ink)}
-.btn.wa{background:#1f9d55;border-color:#1f9d55;color:#fff}
+.btn.wa{background:#157a42;border-color:#157a42;color:#fff}
 .btn:disabled{opacity:.55;cursor:not-allowed}
 @media (prefers-reduced-motion:no-preference){.btn{transition:transform .15s,box-shadow .15s}.btn:hover{transform:translateY(-1px);box-shadow:var(--shadow)}}
 /* Nav */
@@ -151,7 +151,7 @@ textarea{resize:vertical}
 footer{background:#231C19;color:#E6DACA;padding:56px 0 32px;font-size:14px}
 footer .cols{display:grid;grid-template-columns:1.3fr 1fr 1fr;gap:32px}
 @media (max-width:760px){footer .cols{grid-template-columns:1fr}}
-footer h4{font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#B9AC9E;margin:0 0 14px}
+footer h2{font:600 12px/1 var(--sans);letter-spacing:.12em;text-transform:uppercase;color:#B9AC9E;margin:0 0 14px}
 footer a{color:#FBF6EE;text-decoration:none}
 footer a:hover{text-decoration:underline}
 footer ul{list-style:none;padding:0;margin:0;display:grid;gap:8px}
@@ -179,6 +179,7 @@ footer .tit{margin-top:22px;color:#B9AC9E;font-size:12px;line-height:1.7}
   <div class="links"><a href="#como">Cómo funciona</a><a href="#precio">Precio</a><a href="#preguntas">Preguntas</a><a class="btn" href="#suscribirme">Quiero Minuta</a></div>
 </div></nav>
 
+<main>
 <header class="w hero">
   <div>
     <span class="cap">Para restaurantes, bodegones y rotiserías</span>
@@ -299,13 +300,14 @@ footer .tit{margin-top:22px;color:#B9AC9E;font-size:12px;line-height:1.7}
     </div>
   </div>
 </section>
+</main>
 
 <footer>
   <div class="w">
     <div class="cols">
       <div><img src="/brand/minuta-wordmark-reverse.svg" alt="Minuta" style="height:36px"><p class="tag">Pedidos a la minuta.</p></div>
-      <div><h4>Contacto</h4><ul><li><a id="fWa" href="https://wa.me/5491152495689" target="_blank" rel="noopener">WhatsApp +54 11 5249-5689</a></li><li id="fIgLi" hidden><a id="fIg" target="_blank" rel="noopener"></a></li><li id="fMailLi" hidden><a id="fMail"></a></li></ul></div>
-      <div><h4>Legales</h4><ul><li><a href="/terminos">Términos y condiciones</a></li><li><a href="/privacidad">Política de privacidad</a></li><li><a href="https://www.argentina.gob.ar/produccion/defensadelconsumidor/formulario" target="_blank" rel="noopener">Defensa de las y los consumidores. Para reclamos ingrese aquí</a></li></ul></div>
+      <div><h2>Contacto</h2><ul><li><a id="fWa" href="https://wa.me/5491152495689" target="_blank" rel="noopener">WhatsApp +54 11 5249-5689</a></li><li id="fIgLi" hidden><a id="fIg" target="_blank" rel="noopener"></a></li><li id="fMailLi" hidden><a id="fMail"></a></li></ul></div>
+      <div><h2>Legales</h2><ul><li><a href="/terminos">Términos y condiciones</a></li><li><a href="/privacidad">Política de privacidad</a></li><li><a href="https://www.argentina.gob.ar/produccion/defensadelconsumidor/formulario" target="_blank" rel="noopener">Defensa de las y los consumidores. Para reclamos ingrese aquí</a></li></ul></div>
     </div>
     <div class="botones"><a href="/arrepentimiento?tipo=arrepentimiento">Botón de arrepentimiento</a><a href="/arrepentimiento?tipo=baja">Botón de baja</a></div>
     <div class="tit" id="titular"></div>

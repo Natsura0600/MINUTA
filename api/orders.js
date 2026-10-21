@@ -2,6 +2,7 @@ const T = require('../lib/tenants');
 const { ESTADOS, FINAL, getOrder, saveOrder, ordersPanel, marcarActivo, setEstado, clean } = require('../lib/orders');
 const redis = require('../lib/redis');
 const { estadisticas } = require('../lib/stats');
+const stock = require('../lib/stock');
 const { send, fail, body, Reject } = require('../lib/http');
 
 // Panel del local. GET: últimos pedidos. PATCH: cambia el estado de un pedido.
@@ -34,6 +35,9 @@ module.exports = async (req, res) => {
         // Motivo del rechazo: el cliente lo ve en el seguimiento.
         if (b.estado === 'cancelado') o.motivo = clean(b.motivo, 120);
         else delete o.motivo;
+        // Un pedido rechazado devuelve su stock; si se deshace el rechazo, se vuelve a descontar.
+        if (b.estado === 'cancelado') await stock.devolver(tenant.slug, o);
+        else await stock.retomar(tenant.slug, o);
       }
       await saveOrder(tenant.slug, o);
       // Si volvió a estar en curso (por ejemplo, un rechazo deshecho), vuelve a la lista de activos.

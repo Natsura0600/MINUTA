@@ -25,6 +25,8 @@ function redis(args) {
     }
     case 'DEL': { let n = 0; a.forEach((k) => { if (db.delete(k)) n++; if (lists.delete(k)) n++; }); return n; }
     case 'INCR': { const n = Number(db.get(a[0]) || 0) + 1; db.set(a[0], String(n)); return n; }
+    case 'INCRBY': { const n = Number(db.get(a[0]) || 0) + Number(a[1]); db.set(a[0], String(n)); return n; }
+    case 'DECRBY': { const n = Number(db.get(a[0]) || 0) - Number(a[1]); db.set(a[0], String(n)); return n; }
     case 'EXPIRE': return 1;
     case 'SADD': { const s = sets.get(a[0]) || new Set(); s.add(a[1]); sets.set(a[0], s); return 1; }
     case 'SREM': { const s = sets.get(a[0]); if (s) s.delete(a[1]); return 1; }
@@ -497,7 +499,7 @@ test('sesiones y cifrado', async () => {
 });
 
 test('el menú de ejemplo de la página es el mismo que el del servidor', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'index.html'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.html'), 'utf8');
   const m = html.match(/var DEFAULT_CONFIG=(\{[\s\S]*?\n\});/);
   assert.ok(m, 'no encontré DEFAULT_CONFIG en index.html');
   assert.deepStrictEqual(JSON.parse(m[1]), DEFAULT);
@@ -574,4 +576,111 @@ test('mensajes de aviso al cliente se guardan con el local', async () => {
   assert.strictEqual(c.msgListo, 'Hola {nombre}, tu pedido #{numero} ya está.');
   assert.strictEqual(c.msgCamino, '');
   assert.strictEqual((await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ msgListo: 'x'.repeat(301) }) })).status, 400);
+});
+
+test('stock por cantidad: el último plato lo compra uno solo, aunque pidan a la vez', async () => {
+  const L = await nuevoLocal('stk');
+  const cfg = abierto({ nombre: 'Local stk' });
+  cfg.menu.find((p) => p.id === 'cla').stock = 3;
+  const g = await call('menu', { method: 'PUT', host: L.h, headers: bearer(L.token), body: cfg });
+  assert.strictEqual(g.status, 200, JSON.stringify(g.body));
+  const vista = async () => (await call('menu', { host: L.h, query: { fresh: '1' } })).body.config.menu.find((p) => p.id === 'cla');
+  assert.strictEqual((await vista()).quedan, 3);
+
+  // 5 clientes piden 1 unidad a la vez: solo 3 pueden comprarla.
+  let n = 0;
+  const pide = (qty) => call('checkout', { method: 'POST', host: L.h, keepLimits: true, body: pedido({ items: [{ id: 'cla', qty }], modo: 'retiro', cliente: { nombre: 'Ana', tel: '11 5555 ' + String(1000 + n++) } }) });
+  db.forEach((v, k) => { if (k.startsWith('rl:')) db.delete(k); });
+  const rs = await Promise.all([1, 1, 1, 1, 1].map(() => pide(1)));
+  assert.strictEqual(rs.filter((r) => r.status === 200).length, 3, JSON.stringify(rs.map((r) => r.status)));
+  assert.ok(rs.filter((r) => r.status !== 200).every((r) => r.body.error === 'sin_stock'));
+  assert.strictEqual((await vista()).quedan, 0);
+
+  // Un pedido que no alcanza no descuenta nada.
+  const g2 = await call('menu', { method: 'PUT', host: L.h, headers: bearer(L.token), body: Object.assign(cfg, { rev: g.body.config.rev, menu: cfg.menu.map((p) => (p.id === 'cla' ? Object.assign(p, { stock: 2, reponer: true }) : p)) }) });
+  assert.strictEqual(g2.status, 200, JSON.stringify(g2.body));
+  const no = await pide(3);
+  assert.strictEqual(no.status, 409);
+  assert.match(no.body.mensaje, /quedan 2/);
+  assert.strictEqual((await vista()).quedan, 2);
+
+  // Rechazar un pedido devuelve las unidades (una sola vez); deshacer el rechazo las vuelve a descontar.
+  const ok = await pide(2);
+  assert.strictEqual(ok.status, 200);
+  assert.strictEqual((await vista()).quedan, 0);
+  const rechazar = (estado) => call('orders', { method: 'PATCH', host: L.h, headers: bearer(L.token), body: { id: ok.body.id, estado, motivo: 'sin gas' } });
+  await rechazar('cancelado'); await rechazar('cancelado');
+  assert.strictEqual((await vista()).quedan, 2);
+  await rechazar('nuevo');
+  assert.strictEqual((await vista()).quedan, 0);
+
+  // Sin cantidad cargada, el producto no tiene límite.
+  const g3 = await call('menu', { method: 'PUT', host: L.h, headers: bearer(L.token), body: Object.assign(cfg, { rev: g2.body.config.rev, menu: cfg.menu.map((p) => (p.id === 'cla' ? Object.assign(p, { stock: null }) : p)) }) });
+  assert.strictEqual(g3.status, 200);
+  assert.strictEqual((await vista()).quedan, undefined);
+  assert.strictEqual((await pide(5)).status, 200);
+});
+
+test('protección: robots, orígenes ajenos, teléfono repetido y tamaño', async () => {
+  const L = await nuevoLocal('prot');
+  const ped = (extra, headers) => call('checkout', { method: 'POST', host: L.h, headers, body: pedido(Object.assign({ modo: 'retiro' }, extra)) });
+  // Campo trampa lleno: responde "ok" pero no guarda nada.
+  const antes = (await call('orders', { host: L.h, headers: bearer(L.token) })).body.orders.length;
+  const bot = await ped({ web: 'http://spam' });
+  assert.strictEqual(bot.status, 200);
+  assert.strictEqual((await call('orders', { host: L.h, headers: bearer(L.token) })).body.orders.length, antes);
+  // Pedido desde otra página: se rechaza.
+  const ajeno = await ped({}, { origin: 'https://sitio-malo.example' });
+  assert.strictEqual(ajeno.status, 403);
+  const propio = await ped({}, { origin: 'https://' + L.h });
+  assert.strictEqual(propio.status, 200, JSON.stringify(propio.body));
+  // Cuerpo enorme.
+  const grande = await ped({}, { 'content-length': '900000' });
+  assert.strictEqual(grande.status, 413);
+  // El mismo teléfono no puede mandar más de 4 pedidos en 10 minutos.
+  const rs = [];
+  for (let i = 0; i < 5; i++) rs.push((await call('checkout', { method: 'POST', host: L.h, keepLimits: true, body: pedido({ modo: 'retiro', cliente: { nombre: 'Bot', tel: '11 4444-0000' } }) })).status);
+  assert.deepStrictEqual(rs, [200, 200, 200, 200, 429]);
+});
+
+test('SEO: cada local sale con su título, descripción, imagen y datos para Google; el resto, sin indexar', async () => {
+  const seo = require('../lib/seo');
+  const L = await nuevoLocal('seol');
+  const cfg = abierto({ nombre: 'La Parri "Don"', descripcion: 'Parrilla $& de barrio', direccion: 'Mitre 123, Luján', color: '#1f6b5c' });
+  cfg.horario = { dias: [1, 2], desde: 12, hasta: 15, desde2: 20, hasta2: 24 };
+  const g = await call('menu', { method: 'PUT', host: L.h, headers: bearer(L.token), body: cfg });
+  assert.strictEqual(g.status, 200, JSON.stringify(g.body));
+  const req = (pagina, h, query) => ({ method: 'GET', query: Object.assign({ pagina }, query || {}), headers: { host: h || L.h }, socket: {} });
+
+  const t = await seo.pagina(req('tienda'));
+  assert.strictEqual(t.status, 200);
+  assert.match(t.body, /<title>La Parri &quot;Don&quot; · Pedí online<\/title>/);
+  assert.match(t.body, /<meta name="description" content="Parrilla \$&amp; de barrio">/);
+  assert.match(t.body, /<link rel="canonical" href="https:\/\/seol\.pedidos\.test\/">/);
+  assert.match(t.body, /property="og:image" content="https:\/\/seol\.pedidos\.test\/brand\/minuta-mark\.png"/);
+  assert.match(t.body, /name="twitter:card"/);
+  assert.strictEqual((t.body.match(/<title>/g) || []).length, 1);
+  const ld = JSON.parse(t.body.match(/<script type="application\/ld\+json">(.*?)<\/script>/)[1]);
+  assert.strictEqual(ld['@type'], 'Restaurant');
+  assert.strictEqual(ld.address.streetAddress, 'Mitre 123, Luján');
+  assert.deepStrictEqual(ld.openingHoursSpecification.filter((x) => x.dayOfWeek === 'Monday').map((x) => x.opens + '-' + x.closes), ['12:00-15:00', '20:00-23:59']);
+  const boot = JSON.parse(t.body.match(/window\.__BOOT=(.*?);<\/script>/)[1]);
+  assert.strictEqual(boot.config.nombre, 'La Parri "Don"');
+  assert.ok(boot.abierto);
+
+  // Local que no existe, o suspendido: no se indexa.
+  const no = await seo.pagina(req('tienda', 'fantasma.pedidos.test'));
+  assert.strictEqual(no.status, 404);
+  assert.match(no.body, /noindex/);
+  const sup = await call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'editar', slug: 'seol', activo: false } });
+  assert.strictEqual(sup.status, 200, JSON.stringify(sup.body));
+  assert.match((await seo.pagina(req('tienda'))).body, /noindex/);
+  assert.doesNotMatch((await seo.pagina(req('sitemap'))).body, /<loc>/);
+
+  // robots.txt y sitemap.xml
+  const r = await seo.pagina(req('robots'));
+  assert.match(r.body, /Disallow: \/admin/);
+  assert.match(r.body, /Sitemap: https:\/\/seol\.pedidos\.test\/sitemap\.xml/);
+  const sm = await seo.pagina(req('sitemap', 'pedidos.test'));
+  assert.match(sm.body, /<loc>https:\/\/pedidos\.test\/inicio<\/loc>/);
 });

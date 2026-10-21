@@ -51,7 +51,7 @@ button,input,select,textarea{font:inherit;color:inherit}
 .btn.ghost{background:var(--raised);color:var(--ink)}
 .btn.dark{background:var(--ink);color:var(--surface)}
 .btn.ok{background:var(--sifon);color:var(--onsifon)}
-.btn.wa{background:#1f9d55;color:#fff}
+.btn.wa{background:#157a42;color:#fff}
 .btn.danger{background:var(--raised);color:var(--error);border-color:var(--error);box-shadow:2px 2px 0 var(--error)}
 .btn.sm{padding:6px 10px;font-size:13px;border-radius:8px}
 .btn:disabled{opacity:.5;cursor:not-allowed}
@@ -201,7 +201,7 @@ dialog.modal h3{margin:0 0 8px;font:400 26px/1.1 var(--disp)}
 </svg>
 
 <!-- Login -->
-<div class="login" id="login">
+<div class="login" id="login" role="main">
   <div class="card">
     <img src="/brand/minuta-lockup.svg" alt="Minuta" style="height:32px">
     <h1>Hola, jefe.</h1>
@@ -517,12 +517,13 @@ function leerPlan(){
   var p=PLAN;
   p.marca=$('#pMarca').value;p.instagram=$('#pIg').value;p.titulo=$('#pTitulo').value;p.bajada=$('#pBajada').value;p.precio=$('#pPrecio').value;p.periodo=$('#pPeriodo').value;p.alta=$('#pAlta').value;p.whatsapp=$('#pWa').value;p.email=$('#pMail').value;p.incluye=$('#pInc').value.split('\n');
   p.legal={titular:$('#lTit').value,cuit:$('#lCuit').value,email:$('#lMail').value,domicilio:$('#lDom').value};
-  $$('[data-gt]').forEach(function(i){p.galeria[+i.getAttribute('data-gt')].titulo=i.value});
+  $$('[data-gt]').forEach(function(i){var g=(p.galeria||[])[+i.getAttribute('data-gt')];if(g)g.titulo=i.value});
   return p;
 }
-async function guardarPlan(silencio){
+/* yaLeido: el plan en memoria ya tiene los cambios (se quitó o agregó una foto); no hay que volver a leer los campos de la pantalla. */
+async function guardarPlan(silencio,yaLeido){
   var b=$('#pGo');if(b)b.disabled=true;
-  var r=await api({accion:'plan',plan:leerPlan()});
+  var r=await api({accion:'plan',plan:yaLeido?PLAN:leerPlan()});
   if(b)b.disabled=false;
   if(!r.ok){toast(r.j.mensaje||'No se pudo guardar.','bad');return false}
   DATA.plan=r.j.plan;if(!silencio)toast('Guardado. Ya se ve en tu página.');
@@ -542,7 +543,7 @@ function subirSite(file,id,listo){
     var res=await fetch('/api/foto?site=1',{method:'PUT',headers:{'x-super-password':encodeURIComponent(pw),'content-type':'application/json'},body:JSON.stringify({id:id,data:data})});
     var j=await res.json().catch(function(){return {}});
     if(!res.ok){toast(j.mensaje||'No se pudo subir.','bad');return}
-    leerPlan();listo(j.v);await guardarPlan(true);toast('Imagen publicada.');
+    leerPlan();listo(j.v);await guardarPlan(true,true);toast('Imagen publicada.');
   });
 }
 document.addEventListener('change',function(e){
@@ -559,7 +560,7 @@ document.addEventListener('click',async function(e){
   var pg=e.target.closest('[data-pago]');
   if(pg){pg.disabled=true;var r=await api({accion:'pago',slug:pg.getAttribute('data-pago'),meses:1});if(r.ok){toast('Pago registrado: vence el '+fecha(r.j.local.venceEl)+'.');await recargar(true)}else{pg.disabled=false;toast(r.j.mensaje||'No se pudo.','bad')}return}
   var pa=e.target.closest('[data-pg]');
-  if(pa){var a=pa.getAttribute('data-pg');leerPlan();if(a==='nohero')PLAN.hero='';if(a==='gdel')PLAN.galeria.splice(+pa.getAttribute('data-i'),1);await guardarPlan(true);toast('Listo.');return}
+  if(pa){var a=pa.getAttribute('data-pg');leerPlan();if(a==='nohero')PLAN.hero='';if(a==='gdel')PLAN.galeria.splice(+pa.getAttribute('data-i'),1);await guardarPlan(true,true);toast('Listo.');return}
   var tr=e.target.closest('[data-tram]');
   if(tr){tr.disabled=true;var r2=await api({accion:'tramite',id:tr.getAttribute('data-tram'),estado:tr.getAttribute('data-est')});if(r2.ok){toast('Trámite actualizado.');await recargar(true)}else{tr.disabled=false;toast(r2.j.mensaje||'No se pudo.','bad')}return}
   var sa=e.target.closest('[data-sa]');
