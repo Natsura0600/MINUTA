@@ -1,5 +1,5 @@
-const { getConfig, saveConfig, sanitizeConfig, isOpen, imgKey, imagenesDe } = require('../lib/config');
-const redis = require('../lib/redis');
+const { getConfig, saveConfig, sanitizeConfig, isOpen, imgKey, imagenesDe, logoLegado } = require('../lib/config');
+const img = require('../lib/imagenes');
 const T = require('../lib/tenants');
 const { send, fail, body, slugFromReq } = require('../lib/http');
 
@@ -22,13 +22,21 @@ module.exports = async (req, res) => {
     }
     if (req.method === 'PUT') {
       T.requireOwner(req, tenant);
-      const cfg = sanitizeConfig(body(req));
-      const antes = imagenesDe(await getConfig(tenant.slug));
+      const b = body(req);
+      const cfg = sanitizeConfig(b);
+      const actual = await getConfig(tenant.slug);
+      // Control de versión: si otro dispositivo guardó después de que este cargó, no se pisa.
+      if (b.rev !== undefined && Number(b.rev) !== actual.rev) {
+        return send(res, 409, { error: 'conflicto', mensaje: 'Otro dispositivo guardó cambios mientras editabas.', config: actual });
+      }
+      await logoLegado(tenant.slug, cfg);
+      cfg.rev = actual.rev + 1;
+      const antes = imagenesDe(actual);
       await saveConfig(tenant.slug, cfg);
       // Borra las fotos de productos eliminados o reemplazados.
       const ahora = imagenesDe(cfg);
       const sobran = [...antes.keys()].filter((id) => !ahora.has(id));
-      if (sobran.length) await redis.cmd('DEL', ...sobran.map((id) => imgKey(tenant.slug, id))).catch(() => {});
+      if (sobran.length) await img.borrar(sobran.map((id) => imgKey(tenant.slug, id))).catch(() => {});
       if (tenant.nombre !== cfg.nombre) {
         tenant.nombre = cfg.nombre;
         await T.saveTenant(tenant);

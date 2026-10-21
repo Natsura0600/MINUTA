@@ -94,6 +94,11 @@ async function nuevoLocal(slug, email) {
 }
 
 
+// Hora argentina dentro de "min" minutos, como "HH:MM".
+function horaAR(min) {
+  return new Intl.DateTimeFormat('en-GB', { timeZone: 'America/Argentina/Buenos_Aires', hour: '2-digit', minute: '2-digit', hourCycle: 'h23' }).format(new Date(Date.now() + min * 60000));
+}
+
 const PNG = 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==';
 
 test('fotos de productos y banner: solo el dueño sube, cualquiera ve, y se borran al sacar el plato', async () => {
@@ -160,27 +165,32 @@ test('el local elige tipografía, dirección, etiquetas, aviso y formas de entre
 test('retiro con hora (take away unificado), formas de entrega apagadas y pedido mínimo', async () => {
   const a = await nuevoLocal('retirohora');
   const co = (b) => call('checkout', { method: 'POST', host: a.h, body: pedido(Object.assign({ pago: 'efectivo' }, b)) });
-  const r = await co({ modo: 'retiro', hora: '21:30' });
+  const enUnaHora = horaAR(60);
+  const r = await co({ modo: 'retiro', hora: enUnaHora });
   assert.strictEqual(r.status, 200, JSON.stringify(r.body));
   const o = JSON.parse(db.get('t:retirohora:order:' + r.body.id));
-  assert.deepStrictEqual(o.entrega, { modo: 'retiro', zona: '', dir: '', hora: '21:30' });
+  assert.deepStrictEqual(o.entrega, { modo: 'retiro', zona: '', dir: '', hora: enUnaHora });
   assert.strictEqual(o.envio, 0);
   assert.strictEqual(o.historial[0].e, 'nuevo');
   assert.strictEqual((await co({ modo: 'retiro', hora: '' })).status, 200); // lo antes posible
   assert.strictEqual((await co({ modo: 'retiro', hora: '25:00' })).status, 400);
   // Una tienda vieja que todavía manda "takeaway" queda como retiro con hora.
-  const viejo = await co({ modo: 'takeaway', hora: '22:00' });
+  const viejo = await co({ modo: 'takeaway', hora: horaAR(30) });
   assert.strictEqual(viejo.status, 200);
   assert.strictEqual(JSON.parse(db.get('t:retirohora:order:' + viejo.body.id)).entrega.modo, 'retiro');
   const pub = (await call('order', { host: a.h, query: { id: r.body.id } })).body;
   assert.strictEqual(pub.modo, 'retiro');
-  assert.strictEqual(pub.hora, '21:30');
+  assert.strictEqual(pub.hora, enUnaHora);
+  // El servidor no acepta una hora que ya pasó.
+  const pasada = await co({ modo: 'retiro', hora: horaAR(-60) });
+  assert.strictEqual(pasada.status, 400);
+  assert.match(pasada.body.mensaje, /ya pasó/);
   // "en camino" sigue siendo solo para delivery
   assert.strictEqual((await call('orders', { method: 'PATCH', host: a.h, headers: bearer(a.token), body: { id: r.body.id, estado: 'en_camino' } })).status, 400);
 
   // Si el local no deja elegir hora, la hora se ignora.
   await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ elegirHora: false }) });
-  const sinHora = await co({ modo: 'retiro', hora: '21:30' });
+  const sinHora = await co({ modo: 'retiro', hora: horaAR(-60) }); // ni siquiera se valida: se ignora
   assert.strictEqual(JSON.parse(db.get('t:retirohora:order:' + sinHora.body.id)).entrega.hora, '');
 
   await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ modos: { retiro: true, delivery: false } }) });
@@ -192,6 +202,85 @@ test('retiro con hora (take away unificado), formas de entrega apagadas y pedido
   const chico = await co({ modo: 'retiro', items: [{ id: 'agu', qty: 1 }] });
   assert.strictEqual(chico.status, 400);
   assert.match(chico.body.mensaje, /mínimo/);
+});
+
+test('la hora de retiro tiene que caer dentro del horario del local', async () => {
+  const a = await nuevoLocal('horario');
+  const h = nowAR().h;
+  const desde = Math.floor(h), hasta = Math.min(24, desde + 1);
+  // Abierto solo esta hora: dentro de 2 horas y media ya está cerrado.
+  await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ horario: { dias: [0, 1, 2, 3, 4, 5, 6], desde, hasta } }) });
+  const co = (hora) => call('checkout', { method: 'POST', host: a.h, body: pedido({ pago: 'efectivo', modo: 'retiro', hora }) });
+  const fuera = await co(horaAR(150));
+  assert.strictEqual(fuera.status, 400);
+  assert.match(fuera.body.mensaje, /cerrado/);
+  assert.strictEqual((await co(horaAR(0))).status, 200); // ahora mismo sí
+});
+
+test('dos dispositivos: el que guarda sobre una versión vieja recibe aviso en vez de pisar', async () => {
+  const a = await nuevoLocal('versiones');
+  const put = (cfg) => call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: cfg });
+  const base = (await call('menu', { host: a.h })).body.config;
+  const compu = abierto({ rev: base.rev, nombre: 'Desde la compu' });
+  const tablet = abierto({ rev: base.rev, anuncio: 'Desde la tablet' });
+  const r1 = await put(compu);
+  assert.strictEqual(r1.status, 200);
+  assert.strictEqual(r1.body.config.rev, base.rev + 1);
+  const r2 = await put(tablet);
+  assert.strictEqual(r2.status, 409);
+  assert.strictEqual(r2.body.error, 'conflicto');
+  assert.strictEqual(r2.body.config.nombre, 'Desde la compu'); // le devuelve lo último para que decida
+  // El panel ve que cambió la versión sin bajar el menú.
+  assert.strictEqual((await call('orders', { host: a.h, headers: bearer(a.token) })).body.cfgRev, base.rev + 1);
+  // Con la versión nueva, guarda bien.
+  assert.strictEqual((await put(Object.assign(tablet, { rev: base.rev + 1 }))).body.config.rev, base.rev + 2);
+  // Un panel viejo que no manda versión sigue funcionando.
+  assert.strictEqual((await put(abierto())).status, 200);
+});
+
+test('logo viejo embebido se pasa solo al sistema de fotos', async () => {
+  const a = await nuevoLocal('logoviejo');
+  const cfg = JSON.parse(db.get('t:logoviejo:cfg'));
+  cfg.logo = PNG;
+  db.set('t:logoviejo:cfg', JSON.stringify(cfg));
+  const c = (await call('menu', { host: a.h })).body.config;
+  assert.match(c.logo, /^[a-f0-9]{10}$/);
+  assert.strictEqual(JSON.parse(db.get('t:logoviejo:img:logo')).data, PNG);
+  assert.strictEqual(JSON.parse(db.get('t:logoviejo:cfg')).logo, c.logo); // quedó migrado
+});
+
+test('pedidos del día completos aunque pasen de 300, y consulta liviana con los activos', async () => {
+  const a = await nuevoLocal('viernes');
+  const ids = [];
+  for (let i = 0; i < 310; i++) ids.push((await call('checkout', { method: 'POST', host: a.h, body: pedido({ pago: 'efectivo', modo: 'retiro' }) })).body.id);
+  const todo = (await call('orders', { host: a.h, headers: bearer(a.token), query: { todo: '1' } })).body.orders;
+  assert.strictEqual(todo.length, 310);
+  assert.strictEqual(todo[0].numero, 310); // los más nuevos primero
+  // Sin cambios desde la última consulta: no viaja ningún pedido.
+  const r0 = (await call('orders', { host: a.h, headers: bearer(a.token) })).body;
+  const quieta = (await call('orders', { host: a.h, headers: bearer(a.token), query: { rev: String(r0.rev) } })).body;
+  assert.strictEqual(quieta.sinCambios, true);
+  assert.strictEqual(quieta.orders.length, 0);
+  await call('checkout', { method: 'POST', host: a.h, body: pedido({ pago: 'efectivo', modo: 'retiro' }) });
+  const conNuevo = (await call('orders', { host: a.h, headers: bearer(a.token), query: { rev: String(r0.rev) } })).body;
+  assert.ok(!conNuevo.sinCambios);
+  assert.strictEqual(conNuevo.orders[0].numero, 311);
+  assert.ok(conNuevo.rev > r0.rev);
+  // El primero de la noche ya no está entre los últimos 40, pero sigue en curso: la consulta liviana lo trae.
+  const liviana = (await call('orders', { host: a.h, headers: bearer(a.token) })).body.orders;
+  assert.ok(liviana.some((o) => o.id === ids[0]));
+  // Cuando termina hace rato, deja de viajar en cada consulta.
+  const patch = (b) => call('orders', { method: 'PATCH', host: a.h, headers: bearer(a.token), body: b });
+  await patch({ id: ids[0], estado: 'entregado' });
+  assert.ok((await call('orders', { host: a.h, headers: bearer(a.token) })).body.orders.some((o) => o.id === ids[0])); // recién terminado: sí
+  const k = 't:viernes:order:' + ids[0], o = JSON.parse(db.get(k));
+  o.historial[o.historial.length - 1].t = new Date(Date.now() - 3600000).toISOString();
+  db.set(k, JSON.stringify(o));
+  await call('orders', { host: a.h, headers: bearer(a.token) });
+  assert.ok(!sets.get('t:viernes:orders:activos').has(ids[0]));
+  // Si se reabre, vuelve a la lista de activos.
+  await patch({ id: ids[0], estado: 'preparando' });
+  assert.ok(sets.get('t:viernes:orders:activos').has(ids[0]));
 });
 
 test('panel: historial de estados, rechazo con motivo y nota interna', async () => {

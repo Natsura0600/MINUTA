@@ -1,10 +1,12 @@
 {
   "name": "minuta",
-  "version": "3.0.0",
+  "version": "4.0.0",
   "private": true,
   "description": "Minuta: pedidos online para restaurantes, bodegones, rotiserías y pizzerías. Cada local con su subdominio, su panel y su usuario.",
   "scripts": {
     "test": "node --test"
   },
-  "engines": { "node": ">=18" }
+  "engines": {
+    "node": ">=18"
+  }
 }

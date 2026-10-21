@@ -48,7 +48,7 @@ const handlers = {
   checkout: require('../api/checkout'), order: require('../api/order'), orders: require('../api/orders'),
   superadmin: require('../api/superadmin'), plan: require('../api/plan'), suscribir: require('../api/suscribir')
 };
-const { isOpen, nowAR, DEFAULT } = require('../lib/config');
+const { isOpen, nowAR, DEFAULT, sanitizeConfig } = require('../lib/config');
 const T = require('../lib/tenants');
 const cr = require('../lib/crypto');
 const { slugFromReq, siteFor } = require('../lib/http');
@@ -352,7 +352,11 @@ test('logo y color del local se validan', async () => {
   assert.strictEqual((await put(abierto({ color: '#1d4ed8', logo: png }))).status, 200);
   const m = await call('menu', { host: a.h });
   assert.strictEqual(m.body.config.color, '#1d4ed8');
-  assert.strictEqual(m.body.config.logo, png);
+  // El logo se guarda como foto aparte y la configuración solo lleva su versión.
+  assert.match(m.body.config.logo, /^[a-f0-9]{10}$/);
+  assert.strictEqual(JSON.parse(db.get('t:marca:img:logo')).data, png);
+  assert.strictEqual((await put(abierto({ logo: m.body.config.logo }))).status, 200); // guardar de nuevo con la versión
+  assert.strictEqual((await put(abierto({ logo: 'zzzz' }))).status, 400);
   assert.strictEqual((await put(abierto({ color: 'rojo' }))).status, 400);
   assert.strictEqual((await put(abierto({ color: '#12345' }))).status, 400);
   assert.strictEqual((await put(abierto({ logo: 'https://malo.test/x.png' }))).status, 400);
@@ -431,6 +435,29 @@ test('las solicitudes tienen límite por persona', async () => {
   assert.strictEqual(r.status, 429);
 });
 
+test('horario partido: dos turnos, sin pisarse', () => {
+  const base = JSON.parse(JSON.stringify(DEFAULT));
+  base.whatsapp = '5491155550000';
+  const partido = (extra) => Object.assign({}, base, { horario: Object.assign({ dias: [5], desde: 12, hasta: 15, desde2: 20, hasta2: 24 }, extra) });
+  const cfg = sanitizeConfig(partido());
+  assert.deepStrictEqual([cfg.horario.desde2, cfg.horario.hasta2], [20, 24]);
+  const c = { pausado: false, horario: cfg.horario };
+  // Viernes en Argentina (UTC-3): 13:00, 17:00, 21:00
+  assert.strictEqual(isOpen(c, new Date('2026-10-16T16:00:00Z')), true);
+  assert.strictEqual(isOpen(c, new Date('2026-10-16T20:00:00Z')), false);
+  assert.strictEqual(isOpen(c, new Date('2026-10-17T00:00:00Z')), true);
+  // Sin segundo turno sigue igual que antes
+  const uno = sanitizeConfig(partido({ desde2: null, hasta2: null }));
+  assert.strictEqual(uno.horario.desde2, null);
+  assert.strictEqual(isOpen({ pausado: false, horario: uno.horario }, new Date('2026-10-17T00:00:00Z')), false);
+  // Se pisan
+  assert.throws(() => sanitizeConfig(partido({ desde2: 14, hasta2: 18 })), /se pisan/);
+  // Segundo turno que cruza la medianoche y choca con el primero (12 a 15 contra 22 a 13)
+  assert.throws(() => sanitizeConfig(partido({ desde2: 22, hasta2: 13 })), /se pisan/);
+  // Configuración vieja (sin turno 2) sigue funcionando
+  assert.strictEqual(isOpen({ pausado: false, horario: { dias: [5], desde: 20, hasta: 24 } }, new Date('2026-10-17T00:00:00Z')), true);
+});
+
 test('horario con hora argentina y fechas de la mensualidad', () => {
   const cfg = { pausado: false, horario: { dias: [5], desde: 20, hasta: 24 } };
   assert.strictEqual(isOpen(cfg, new Date('2026-10-17T00:00:00Z')), true); // viernes 21:00 en Argentina
@@ -474,4 +501,77 @@ test('el menú de ejemplo de la página es el mismo que el del servidor', () => 
   const m = html.match(/var DEFAULT_CONFIG=(\{[\s\S]*?\n\});/);
   assert.ok(m, 'no encontré DEFAULT_CONFIG en index.html');
   assert.deepStrictEqual(JSON.parse(m[1]), DEFAULT);
+});
+
+test('estadísticas semanales: ventas, cancelados, horas pico y comparación', async () => {
+  const a = await nuevoLocal('numeros');
+  await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto() });
+  const p1 = await call('checkout', { method: 'POST', host: a.h, body: pedido({ modo: 'retiro', pago: 'efectivo' }) });
+  const p2 = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
+  const p3 = await call('checkout', { method: 'POST', host: a.h, body: pedido() });
+  const tot = (p) => JSON.parse(db.get('t:numeros:order:' + p.body.id)).total;
+  assert.strictEqual(p1.status, 200);
+  await call('orders', { method: 'PATCH', host: a.h, headers: bearer(a.token), body: { id: p3.body.id, estado: 'cancelado', motivo: 'sin stock' } });
+  const r = await call('orders', { host: a.h, headers: bearer(a.token), query: { stats: '7' } });
+  assert.strictEqual(r.status, 200);
+  const s = r.body;
+  assert.strictEqual(s.dias, 7);
+  assert.strictEqual(s.actual.pedidos, 2);
+  assert.strictEqual(s.actual.cancelados, 1);
+  assert.strictEqual(s.actual.retiro, 1);
+  assert.strictEqual(s.actual.delivery, 1);
+  assert.strictEqual(s.actual.ventas, tot(p1) + tot(p2));
+  assert.strictEqual(s.actual.ticket, Math.round(s.actual.ventas / 2));
+  assert.strictEqual(s.actual.porDia.length, 7);
+  assert.strictEqual(s.actual.porHora.reduce((x, y) => x + y, 0), 2);
+  assert.strictEqual(s.actual.top[0].nom, 'Milanesa napolitana');
+  assert.strictEqual(s.anterior.pedidos, 0);
+  const m = await call('orders', { host: a.h, headers: bearer(a.token), query: { stats: '30' } });
+  assert.strictEqual(m.body.actual.porDia.length, 30);
+  // Solo el dueño
+  const sin = await call('orders', { host: a.h, query: { stats: '7' } });
+  assert.strictEqual(sin.status, 401);
+});
+
+test('productos con tamaños: precio por tamaño, obligatorio elegir y "desde" en el menú', async () => {
+  const a = await nuevoLocal('tamanos');
+  const cfg = abierto();
+  const pizza = cfg.menu.find((p) => p.id === 'cla');
+  pizza.variantes = [{ id: 'v1', nom: 'Chica', precio: 8000 }, { id: 'v2', nom: 'Grande', precio: 12000 }];
+  pizza.precio = 1; // se ignora: pasa a ser el menor tamaño
+  const g = await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: cfg });
+  assert.strictEqual(g.status, 200);
+  const pub = (await call('menu', { host: a.h })).body.config.menu.find((p) => p.id === 'cla');
+  assert.strictEqual(pub.precio, 8000);
+  assert.strictEqual(pub.variantes.length, 2);
+  // Sin elegir tamaño: rechazo
+  const sin = await call('checkout', { method: 'POST', host: a.h, body: pedido({ items: [{ id: 'cla', qty: 1 }], modo: 'retiro', pago: 'efectivo' }) });
+  assert.strictEqual(sin.status, 400);
+  assert.match(sin.body.mensaje, /tamaño/);
+  // Tamaño inexistente: rechazo
+  const mal = await call('checkout', { method: 'POST', host: a.h, body: pedido({ items: [{ id: 'cla', vid: 'zz', qty: 1 }], modo: 'retiro', pago: 'efectivo' }) });
+  assert.strictEqual(mal.status, 400);
+  // Con tamaño y extra: precio del tamaño + extra
+  const ok = await call('checkout', { method: 'POST', host: a.h, body: pedido({ items: [{ id: 'cla', vid: 'v2', qty: 2, extras: ['e2'] }], modo: 'retiro', pago: 'efectivo' }) });
+  assert.strictEqual(ok.status, 200);
+  const o = JSON.parse(db.get('t:tamanos:order:' + ok.body.id));
+  assert.strictEqual(o.items[0].variante, 'Grande');
+  assert.strictEqual(o.items[0].unit, 12000 + 1500);
+  assert.strictEqual(o.total, (12000 + 1500) * 2);
+  // Un solo tamaño no tiene sentido
+  pizza.variantes = [{ id: 'v1', nom: 'Única', precio: 8000 }];
+  assert.strictEqual((await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: cfg })).status, 400);
+  // Productos sin tamaños no se ven afectados
+  const comun = await call('checkout', { method: 'POST', host: a.h, body: pedido({ items: [{ id: 'bbq', qty: 1 }], modo: 'retiro', pago: 'efectivo' }) });
+  assert.strictEqual(comun.status, 200);
+});
+
+test('mensajes de aviso al cliente se guardan con el local', async () => {
+  const a = await nuevoLocal('avisos');
+  const cfg = abierto({ msgListo: 'Hola {nombre}, tu pedido #{numero} ya está.', msgCamino: '' });
+  assert.strictEqual((await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: cfg })).status, 200);
+  const c = (await call('menu', { host: a.h })).body.config;
+  assert.strictEqual(c.msgListo, 'Hola {nombre}, tu pedido #{numero} ya está.');
+  assert.strictEqual(c.msgCamino, '');
+  assert.strictEqual((await call('menu', { method: 'PUT', host: a.h, headers: bearer(a.token), body: abierto({ msgListo: 'x'.repeat(301) }) })).status, 400);
 });
