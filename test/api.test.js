@@ -499,9 +499,9 @@ test('sesiones y cifrado', async () => {
 });
 
 test('el menú de ejemplo de la página es el mismo que el del servidor', () => {
-  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.html'), 'utf8');
+  const html = fs.readFileSync(path.join(__dirname, '..', 'public', 'app.js'), 'utf8');
   const m = html.match(/var DEFAULT_CONFIG=(\{[\s\S]*?\n\});/);
-  assert.ok(m, 'no encontré DEFAULT_CONFIG en index.html');
+  assert.ok(m, 'no encontré DEFAULT_CONFIG en app.js');
   assert.deepStrictEqual(JSON.parse(m[1]), DEFAULT);
 });
 
@@ -664,9 +664,9 @@ test('SEO: cada local sale con su título, descripción, imagen y datos para Goo
   assert.strictEqual(ld['@type'], 'Restaurant');
   assert.strictEqual(ld.address.streetAddress, 'Mitre 123, Luján');
   assert.deepStrictEqual(ld.openingHoursSpecification.filter((x) => x.dayOfWeek === 'Monday').map((x) => x.opens + '-' + x.closes), ['12:00-15:00', '20:00-23:59']);
-  const boot = JSON.parse(t.body.match(/window\.__BOOT=(.*?);<\/script>/)[1]);
+  const boot = JSON.parse(t.body.match(/<script type="application\/json" id="boot">(.*?)<\/script>/)[1]);
   assert.strictEqual(boot.config.nombre, 'La Parri "Don"');
-  assert.ok(boot.abierto);
+  assert.strictEqual(typeof boot.abierto, 'boolean'); // depende del día y la hora en que corra el test
 
   // Local que no existe, o suspendido: no se indexa.
   const no = await seo.pagina(req('tienda', 'fantasma.pedidos.test'));
@@ -683,4 +683,76 @@ test('SEO: cada local sale con su título, descripción, imagen y datos para Goo
   assert.match(r.body, /Sitemap: https:\/\/seol\.pedidos\.test\/sitemap\.xml/);
   const sm = await seo.pagina(req('sitemap', 'pedidos.test'));
   assert.match(sm.body, /<loc>https:\/\/pedidos\.test\/inicio<\/loc>/);
+});
+
+test('pedidos sin duplicar: el mismo intento (doble toque o reintento) crea un solo pedido', async () => {
+  const L = await nuevoLocal('idem');
+  const clave = 'intento-0123456789abcdef';
+  const enviar = (extra) => call('checkout', { method: 'POST', host: L.h, keepLimits: true, body: pedido(Object.assign({ modo: 'retiro', clave }, extra)) });
+  db.forEach((v, k) => { if (k.startsWith('rl:')) db.delete(k); });
+  // Tres envíos a la vez con la misma clave: un pedido nuevo y el resto devuelven ese mismo.
+  const rs = await Promise.all([enviar(), enviar(), enviar()]);
+  const ok = rs.filter((r) => r.status === 200);
+  assert.ok(ok.length >= 1);
+  assert.strictEqual(new Set(ok.map((r) => r.body.id)).size, 1);
+  assert.ok(rs.every((r) => r.status === 200 || r.body.error === 'en_proceso'), JSON.stringify(rs.map((r) => r.body)));
+  // Un reintento posterior devuelve el mismo pedido y marca que es repetido.
+  const otra = await enviar();
+  assert.strictEqual(otra.status, 200);
+  assert.strictEqual(otra.body.id, ok[0].body.id);
+  assert.strictEqual(otra.body.repetido, true);
+  const n = (await call('orders', { host: L.h, headers: bearer(L.token) })).body.orders.length;
+  assert.strictEqual(n, 1);
+  // Si el pedido falla (por ejemplo, plato agotado), la clave queda libre para reintentar.
+  const mal = await call('checkout', { method: 'POST', host: L.h, keepLimits: true, body: pedido({ modo: 'retiro', clave: 'otro-intento-0123456789', items: [{ id: 'noexiste', qty: 1 }] }) });
+  assert.strictEqual(mal.status, 400);
+  const bien = await call('checkout', { method: 'POST', host: L.h, keepLimits: true, body: pedido({ modo: 'retiro', clave: 'otro-intento-0123456789', cliente: { nombre: 'Ana', tel: '11 5555 7777' } }) });
+  assert.strictEqual(bien.status, 200, JSON.stringify(bien.body));
+});
+
+test('registro: los errores del servidor y las operaciones sensibles quedan guardados', async () => {
+  const log = require('../lib/log');
+  const L = await nuevoLocal('reg');
+  await call('account', { method: 'POST', host: L.h, headers: bearer(L.token), body: { accion: 'clave', actual: L.password, nueva: 'otra-clave-larga-1' } });
+  await call('superadmin', { method: 'POST', headers: SUPER, body: { accion: 'editar', slug: 'reg', activo: false } });
+  const aud = await log.auditoria(50);
+  const acciones = aud.filter((a) => a.slug === 'reg').map((a) => a.accion);
+  assert.ok(acciones.includes('cambio_clave'));
+  assert.ok(acciones.includes('local_editado'));
+  assert.ok(acciones.includes('menu_guardado'));
+  assert.ok(!JSON.stringify(aud).includes('otra-clave-larga-1'), 'no se guardan contraseñas');
+  // Un error inesperado queda registrado con la ruta.
+  const { fail } = require('../lib/http');
+  const res = { statusCode: 0, req: { url: '/api/algo?x=1', method: 'GET', headers: { host: 'reg.pedidos.test' } }, setHeader() {}, end() {} };
+  const antes = console.error; console.error = () => {};
+  await fail(res, new Error('se rompió algo'));
+  console.error = antes;
+  assert.strictEqual(res.statusCode, 500);
+  const errs = await log.errores(5);
+  assert.strictEqual(errs[0].msg, 'se rompió algo');
+  assert.strictEqual(errs[0].ruta, '/api/algo');
+  // El Superadmin las ve.
+  const v = await call('superadmin', { headers: SUPER, query: { registro: '1' } });
+  assert.strictEqual(v.status, 200);
+  assert.ok(v.body.errores.length >= 1 && v.body.auditoria.length >= 1);
+});
+
+test('estado del sistema: página para el local y endpoint de salud para el monitor', async () => {
+  const seo = require('../lib/seo');
+  const req = (pagina) => ({ method: 'GET', query: { pagina }, headers: { host: 'pedidos.test' }, socket: {} });
+  const s = await seo.pagina(req('salud'));
+  assert.strictEqual(s.status, 200);
+  assert.strictEqual(JSON.parse(s.body).ok, true);
+  assert.strictEqual(s.cache, 'no-store');
+  const e = await seo.pagina(req('estado'));
+  assert.strictEqual(e.status, 200);
+  assert.match(e.body, /El sistema funciona/);
+  assert.match(e.body, /noindex/);
+  // Si Redis no responde, avisa con 503 (el monitor externo se entera).
+  const f = global.fetch;
+  global.fetch = async () => { throw new Error('caído'); };
+  const caido = await seo.pagina(req('salud'));
+  global.fetch = f;
+  assert.strictEqual(caido.status, 503);
+  assert.strictEqual(JSON.parse(caido.body).ok, false);
 });

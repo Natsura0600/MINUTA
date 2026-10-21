@@ -24,6 +24,6 @@ module.exports = async (req, res) => {
     }
     send(res, 200, { token: T.newSession(tenant), nombre: tenant.nombre });
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

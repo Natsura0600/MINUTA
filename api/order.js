@@ -15,6 +15,6 @@ module.exports = async (req, res) => {
       pago: { metodo: o.pago.metodo, pagado: Boolean(o.pago.pagado) }, total: o.total
     }, 'no-store');
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

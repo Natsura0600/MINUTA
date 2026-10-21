@@ -4,7 +4,8 @@
   "private": true,
   "description": "Minuta: pedidos online para restaurantes, bodegones, rotiserías y pizzerías. Cada local con su subdominio, su panel y su usuario.",
   "scripts": {
-    "test": "node --test"
+    "test": "node --test",
+    "carga": "node tools/carga.js"
   },
   "engines": {
     "node": ">=18"

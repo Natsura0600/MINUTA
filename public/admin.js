@@ -405,7 +405,7 @@ async function patchOrder(id,body){
     if(!r.ok||!j||!j.order){toast((j&&j.mensaje)||'No se pudo cambiar.');return null}
     A.orders=A.orders.map(function(o){return o.id===j.order.id?j.order:o});delete A.fresh[j.order.id];
     return j.order;
-  }catch(err){toast('No pudimos conectar.');return null}
+  }catch(err){toast('Sin conexión: el cambio NO se guardó. Probá de nuevo cuando vuelva internet.');return null}
 }
 function trasCambio(o){
   if(A.tab==='pedidos')refrescarPedidos();
@@ -693,16 +693,29 @@ async function aPoll(){
   try{
     var full=Date.now()-(A.ultFull||0)>5*60000;
     /* Si nada cambió desde la última consulta, el servidor no manda pedidos (casi no gasta base de datos). */
-    var r=await aFetch('/api/orders'+(full?'?todo=1':typeof A.orev==='number'?'?rev='+A.orev:''));if(!r.ok)return;
-    var j=await r.json();if(!j.sinCambios)mezclarPedidos(j.orders);A.estado=j.estado;A.orev=j.rev;if(full)A.ultFull=Date.now();
+    var r=await aFetch('/api/orders'+(full?'?todo=1':typeof A.orev==='number'?'?rev='+A.orev:''));
+    if(!r.ok){if(r.status>=500)fallaDeRed();return}
+    var j=await r.json();
+    /* Volvió la conexión: se baja todo el día de nuevo para no perder ningún pedido que haya entrado mientras tanto. */
+    if(A.fallas){A.fallas=0;sinConexion(false);if(!full){A.ultFull=0;aPollEnCurso=false;return await aPoll()}}if(!j.sinCambios)mezclarPedidos(j.orders);A.estado=j.estado;A.orev=j.rev;if(full)A.ultFull=Date.now();
     revisarVersion(j.cfgRev);
     var nuevos=[];
     j.orders.forEach(function(o){if(!A.seen.has(o.id)){A.seen.add(o.id);if(o.estado==='nuevo'){A.fresh[o.id]=1;nuevos.push(o)}}});
     if(nuevos.length){beep();toast(nuevos.length>1?'Entraron '+nuevos.length+' pedidos nuevos.':'Entró el pedido '+numPed(nuevos[0])+'.');nuevos.forEach(avisoNavegador);try{if(navigator.vibrate)navigator.vibrate([120,80,120])}catch(e){}}
     if(A.tab==='pedidos'&&!$('#dRech').open)refrescarPedidos();
     else pintarLista();
-  }catch(e){}finally{aPollEnCurso=false}
+  }catch(e){fallaDeRed()}finally{aPollEnCurso=false}
 }
+/* Sin internet en el local: aviso bien visible y, si dura, un sonido cada minuto. Los pedidos no se pierden: quedan en el servidor. */
+function fallaDeRed(){A.fallas=(A.fallas||0)+1;if(A.fallas>=2)sinConexion(true);if(A.fallas>=6&&A.fallas%6===0)beep(true)}
+function sinConexion(si){
+  var b=$('#aOff');
+  if(!b){b=document.createElement('div');b.id='aOff';b.className='aoff';b.setAttribute('role','alert');b.innerHTML='<b>Sin conexión.</b> No vas a ver pedidos nuevos hasta que vuelva internet. Si dura, tomalos por WhatsApp: los que entraron mientras tanto aparecen solos al reconectar.';document.body.appendChild(b)}
+  b.hidden=!si;
+  document.title=(si?'⚠ Sin conexión · ':'')+'Panel del local · Minuta';
+}
+window.addEventListener('offline',function(){if(A.tok)sinConexion(true)});
+window.addEventListener('online',function(){if(A.tok){A.fallas=1;aPollEnCurso=false;aPoll()}});
 
 /* ----- Menú (grilla) ----- */
 function fld(label,path,val,kind,opt){
@@ -1064,7 +1077,7 @@ async function renderCuenta(){
   }
   var c=A.cuenta,E={activo:'Al día',vencido:'Vencida',suspendido:'Suspendido'};
   var h='<div class="sh" style="margin-top:22px"><h2>Cuenta</h2><p>Tu plan, los datos de acceso y ayuda de Minuta.</p></div><div class="box rise"><h4 role="heading" aria-level="3">Tu plan Minuta</h4><p><span class="badge'+(c.estado==='activo'?' ok':' bad')+'">'+esc(E[c.estado]||c.estado)+'</span> '+(c.venceEl?'<span class="mono">Vence el '+esc(fechaTxt(c.venceEl))+'</span>':'')+'</p><p class="note">Usuario: '+esc(c.email)+'</p>'+
-  '<div class="acts"><a class="btn wa" target="_blank" rel="noopener" href="'+esc(MI_WA_URL('Hola! Soy de '+S.cfg.nombre+' y necesito ayuda con Minuta.'))+'">'+ico('wa')+'Soporte: +54 11 5249-5689</a></div></div>';
+  '<div class="acts"><a class="btn ghost" target="_blank" rel="noopener" href="/ayuda.html">'+ico('comanda')+'Guía rápida para tu equipo</a><a class="btn wa" target="_blank" rel="noopener" href="'+esc(MI_WA_URL('Hola! Soy de '+S.cfg.nombre+' y necesito ayuda con Minuta.'))+'">'+ico('wa')+'Soporte: +54 11 5249-5689</a></div></div>';
   h+='<div class="box"><h4 role="heading" aria-level="3">Cambiar contraseña</h4><label class="f" for="pwA">Contraseña actual<input id="pwA" type="password" autocomplete="current-password"></label>'+
   '<label class="f" for="pwN">Contraseña nueva (mínimo 8 caracteres)<input id="pwN" type="password" autocomplete="new-password"></label><div class="acts"><button class="btn" id="pwGuardar">Cambiar contraseña</button></div>'+
   '<p class="note" id="cuMsg" role="status"></p></div>';

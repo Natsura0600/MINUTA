@@ -1,5 +1,6 @@
 const cr = require('../lib/crypto');
 const T = require('../lib/tenants');
+const { auditar } = require('../lib/log');
 const { send, fail, body, Reject } = require('../lib/http');
 
 // Cuenta del local: datos del plan y cambio de contraseña.
@@ -27,6 +28,7 @@ module.exports = async (req, res) => {
         }
         await T.setPassword(tenant, nueva);
         await T.saveTenant(tenant);
+        await auditar('dueño', tenant.slug, 'cambio_clave', 'El dueño cambió su contraseña');
         return send(res, 200, { ok: true, token: T.newSession(tenant) });
       }
 
@@ -34,6 +36,6 @@ module.exports = async (req, res) => {
     }
     send(res, 405, { error: 'method' });
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

@@ -13,6 +13,18 @@
       "destination": "/api/menu?pagina=sitemap"
     },
     {
+      "source": "/ayuda",
+      "destination": "/ayuda.html"
+    },
+    {
+      "source": "/salud",
+      "destination": "/api/menu?pagina=salud"
+    },
+    {
+      "source": "/estado",
+      "destination": "/api/menu?pagina=estado"
+    },
+    {
       "source": "/inicio",
       "destination": "/inicio.html"
     },
@@ -67,12 +79,12 @@
         },
         {
           "key": "Content-Security-Policy",
-          "value": "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
+          "value": "default-src 'self'; script-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; img-src 'self' data: blob:; connect-src 'self'; object-src 'none'; base-uri 'self'; form-action 'self'; frame-ancestors 'self'"
         }
       ]
     },
     {
-      "source": "/(admin|superadmin|app.html|superadmin.html)",
+      "source": "/(admin|superadmin|app.html|superadmin.html|ayuda.html|ayuda)",
       "headers": [
         {
           "key": "X-Robots-Tag",

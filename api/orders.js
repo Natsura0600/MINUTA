@@ -46,6 +46,6 @@ module.exports = async (req, res) => {
     }
     send(res, 405, { error: 'method' });
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

@@ -2,6 +2,7 @@ const redis = require('../lib/redis');
 const cr = require('../lib/crypto');
 const T = require('../lib/tenants');
 const site = require('../lib/site');
+const { auditar, errores, auditoria } = require('../lib/log');
 const { rootDomain, send, fail, body, requireSuper, Reject } = require('../lib/http');
 
 function vista(m, pedidos) {
@@ -26,6 +27,9 @@ module.exports = async (req, res) => {
     }
     await requireSuper(req);
 
+    if (req.method === 'GET' && req.query && req.query.registro) {
+      return send(res, 200, { errores: await errores(150), auditoria: await auditoria(300) });
+    }
     if (req.method === 'GET') {
       const metas = await T.listTenants();
       const seqs = metas.length ? await redis.cmd('MGET', ...metas.map((m) => redis.tk(m.slug, 'orders:seq'))) : [];
@@ -38,6 +42,7 @@ module.exports = async (req, res) => {
     const b = body(req);
     if (b.accion === 'crear') {
       const { meta, password } = await T.createTenant(b);
+      await auditar('superadmin', meta.slug, 'local_creado', meta.nombre);
       return send(res, 200, { ok: true, local: vista(meta), password });
     }
 
@@ -54,6 +59,7 @@ module.exports = async (req, res) => {
       const lead = await site.getLead(b.id);
       if (!lead) throw new Reject('No encontramos esa solicitud.', 404);
       const { meta, password } = await T.createTenant({ nombre: lead.nombre, slug: b.slug, email: lead.email, venceEl: b.venceEl, whatsapp: lead.whatsapp });
+      await auditar('superadmin', meta.slug, 'solicitud_aprobada', meta.nombre);
       lead.estado = 'aprobada';
       lead.slug = meta.slug;
       await site.saveLead(lead);
@@ -86,27 +92,31 @@ module.exports = async (req, res) => {
         m.cuota = c;
       }
       await T.saveTenant(m);
+      await auditar('superadmin', m.slug, 'local_editado', ['activo' in b ? 'activo=' + b.activo : '', 'venceEl' in b ? 'vence ' + b.venceEl : '', 'cuota' in b ? 'cuota ' + b.cuota : '', 'email' in b ? 'email' : ''].filter(Boolean).join(' · ') || 'datos');
       return send(res, 200, { ok: true, local: vista(m) });
     }
     if (b.accion === 'pago') {
       const meses = Number.isInteger(b.meses) && b.meses >= 1 && b.meses <= 12 ? b.meses : 1;
       T.registrarPago(m, meses, Number.isInteger(b.monto) ? b.monto : (m.cuota || 0) * meses);
       await T.saveTenant(m);
+      await auditar('superadmin', m.slug, 'pago_registrado', meses + ' mes(es) · vence ' + m.venceEl);
       return send(res, 200, { ok: true, local: vista(m) });
     }
     if (b.accion === 'clave') {
       const password = cr.randomPassword();
       await T.setPassword(m, password);
       await T.saveTenant(m);
+      await auditar('superadmin', m.slug, 'clave_restablecida', 'Se generó una contraseña nueva');
       return send(res, 200, { ok: true, local: vista(m), password });
     }
     if (b.accion === 'borrar') {
       if (b.confirmar !== m.slug) throw new Reject('Para borrar el local, escribí su dirección para confirmar.', 400);
       await T.deleteTenant(m.slug);
+      await auditar('superadmin', m.slug, 'local_borrado', m.nombre);
       return send(res, 200, { ok: true });
     }
     throw new Reject('Acción desconocida.', 400);
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

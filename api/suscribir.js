@@ -19,6 +19,6 @@ module.exports = async (req, res) => {
     await createLead(b);
     send(res, 200, { ok: true });
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

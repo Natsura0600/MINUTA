@@ -2,6 +2,7 @@ const { getConfig, saveConfig, sanitizeConfig, isOpen, imgKey, imagenesDe, logoL
 const img = require('../lib/imagenes');
 const T = require('../lib/tenants');
 const stock = require('../lib/stock');
+const { auditar } = require('../lib/log');
 const seo = require('../lib/seo');
 const { send, fail, body, slugFromReq } = require('../lib/http');
 
@@ -52,6 +53,7 @@ module.exports = async (req, res) => {
       const antes = imagenesDe(actual);
       await saveConfig(tenant.slug, cfg);
       await stock.aplicarCambios(tenant.slug, actual, cfg, b);
+      await auditar('dueño', tenant.slug, 'menu_guardado', 'Versión ' + cfg.rev + ' · ' + cfg.menu.length + ' platos' + (cfg.pausado ? ' · pedidos pausados' : ''));
       // Borra las fotos de productos eliminados o reemplazados.
       const ahora = imagenesDe(cfg);
       const sobran = [...antes.keys()].filter((id) => !ahora.has(id));
@@ -64,6 +66,6 @@ module.exports = async (req, res) => {
     }
     send(res, 405, { error: 'method' });
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

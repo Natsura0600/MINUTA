@@ -19,6 +19,6 @@ module.exports = async (req, res) => {
     const t = await createTramite(b);
     send(res, 200, { ok: true, codigo: t.codigo, tipo: t.tipo, creado: t.creado });
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

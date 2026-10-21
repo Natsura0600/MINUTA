@@ -78,6 +78,6 @@ module.exports = async (req, res) => {
     await img.guardar(key, v, data);
     send(res, 200, { ok: true, id, v });
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };

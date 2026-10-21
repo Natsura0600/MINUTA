@@ -13,6 +13,6 @@ module.exports = async (req, res) => {
     }
     send(res, 200, { plan: await getPlan() }, 'public, max-age=0, s-maxage=30, stale-while-revalidate=120');
   } catch (e) {
-    fail(res, e);
+    await fail(res, e);
   }
 };
